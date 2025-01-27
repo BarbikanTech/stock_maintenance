@@ -49,25 +49,18 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute();
 $productReport = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    // Fetch top 10 products with rank
-$stmt = $pdo->prepare("
-    SELECT 
-        p.product_id AS product_id,
-        p.product_name AS product_name,
-        p.sku AS sku,
-        SUM(sh.quantity) AS total_outward_quantity,
-        RANK() OVER (ORDER BY SUM(sh.quantity) DESC) AS rank
-    FROM 
-        stock_history sh
-    INNER JOIN product p ON sh.product_id = p.product_id
-    WHERE sh.types = 'outward'
-    GROUP BY p.product_id
-    ORDER BY rank ASC
-    LIMIT 10
-");
-$stmt->execute();
-$topProducts = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+    // Fetch top 10 products
+    $stmt = $pdo->prepare("
+        SELECT 
+            p.product_id AS product_id,
+            p.product_name AS product_name,
+            p.sku AS sku
+        FROM 
+            product p
+        LIMIT 10
+    ");
+    $stmt->execute();
+    $topProducts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Fetch top 10 customers
     $stmt = $pdo->prepare("
