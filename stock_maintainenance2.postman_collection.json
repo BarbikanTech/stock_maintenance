@@ -1,0 +1,891 @@
+{
+	"info": {
+		"_postman_id": "7cd948ee-9c77-497e-a6c9-b85d9f58e2e5",
+		"name": "stock_maintainenance2",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "38707406",
+		"_collection_link": "https://vijaty.postman.co/workspace/gwms~a48cb214-fae8-4f18-ac12-6fda9bb7fd7f/collection/38707406-7cd948ee-9c77-497e-a6c9-b85d9f58e2e5?action=share&source=collection_link&creator=38707406"
+	},
+	"item": [
+		{
+			"name": "user",
+			"item": [
+				{
+					"name": "get all user",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/stockmaintenance2/user/view_user.php?username=radha",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance2",
+								"user",
+								"view_user.php"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "radha"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create user",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Radha Krishnan\",\r\n    \"username\": \"radha\",\r\n    \"password\": \"0002\",\r\n    \"role\": \"staff\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/stockmaintenance2/user/create_user.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance2",
+								"user",
+								"create_user.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update user",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"radha\",\r\n    \"name\": \"Radha Krish\",\r\n    \"role\": \"staff\",\r\n    \"password\": \"0002\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/stockmaintenance2/user/edit_user.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance2",
+								"user",
+								"edit_user.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete user",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"radha\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/stockmaintenance2/user/delete_user.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance2",
+								"user",
+								"delete_user.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"Radha\",\r\n    \"password\": \"0002\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/stockmaintenance2/login.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance2",
+								"login.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Product",
+			"item": [
+				{
+					"name": "get all products",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/stockmaintenance2/product/view_product.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance2",
+								"product",
+								"view_product.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create new products",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \r\n    \"product_name\": \"Oil Filter\", \r\n    \"unit\": \"1 Barrel\", \r\n    \"subunit\": \"100 L\",\r\n    \"mrp_details\": [\r\n        {\r\n            \"mrp\": 500,\r\n            \"opening_stock\": 55,\r\n            \"current_stock\": 55,\r\n            \"minimum_stock\": 30,\r\n            \"excess_stock\": 0\r\n        }, \r\n        {\r\n            \"mrp\": 600,\r\n            \"opening_stock\": 45,\r\n            \"current_stock\": 45,\r\n            \"minimum_stock\": 20,\r\n            \"excess_stock\": 0\r\n        } \r\n    ]\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/stockmaintenance2/product/create_product.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance2",
+								"product",
+								"create_product.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update the products",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"product_id\": \"PROD-001\",\r\n    \"product_name\": \"Engine Oil\",\r\n    \"unit\": \"1 Barrel\",\r\n    \"subunit\": \"100 L\",\r\n    \"mrp_details\": [\r\n        {\r\n            \"unique_id\": \"77c81673-ca5e-11ef-b248-989096d40073\", \r\n            \"mrp\": 500,\r\n            \"opening_stock\": 50,\r\n            \"current_stock\": 50,\r\n            \"minimum_stock\": 30,\r\n            \"excess_stock\": 0\r\n        },\r\n        {  \r\n            \"unique_id\": \"77c8278a-ca5e-11ef-b248-989096d40073\",\r\n            \"mrp\": 600,\r\n            \"opening_stock\": 40,\r\n            \"current_stock\": 40,\r\n            \"minimum_stock\": 20,\r\n            \"excess_stock\": 0\r\n        },\r\n        {\r\n            \"unique_id\": \"d6a8b974-ca5e-11ef-b248-989096d40073\",\r\n            \"mrp\": 700,\r\n            \"opening_stock\": 30,\r\n            \"current_stock\": 30,\r\n            \"minimum_stock\": 15,\r\n            \"excess_stock\": 0\r\n        } \r\n    ]\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/stockmaintenance2/product/edit_product.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance2",
+								"product",
+								"edit_product.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete the products",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"product_id\": \"PROD_001\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/stockmaintenance2/product/delete_product.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance2",
+								"product",
+								"delete_product.php"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "vendor",
+			"item": [
+				{
+					"name": "get all vendor",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "create new vendor",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost/stockmaintenance/vendor.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance",
+								"vendor.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update the vendor",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost/stockmaintenance/vendor.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance",
+								"vendor.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete the vendor",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost/stockmaintenance/vendor.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance",
+								"vendor.php"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "purchase",
+			"item": [
+				{
+					"name": "get all purchase",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost/stockmaintenance2/purchase/view_purchase.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance2",
+								"purchase",
+								"view_purchase.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create a purchase",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"vendor_name\": \"Radha Krishnan\",\r\n    \"invoice_number\": \"INV_001\",\r\n    \"product_id\": \"PROD-001\",\r\n    \"quantity\": 100\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/stockmaintenance/purchase/create_purchase.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance",
+								"purchase",
+								"create_purchase.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update the purchase",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/stockmaintenance2/purchase/update_purchase.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance2",
+								"purchase",
+								"update_purchase.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete purchase record",
+					"request": {
+						"method": "DELETE",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "customer",
+			"item": [
+				{
+					"name": "New Request",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "create a customer",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"customer_name\": \"Surya\",\r\n    \"mobile_number\": \"73453535353\",\r\n    \"business_name\": \"Surya Enterprises\",\r\n    \"gst_number\": \"GST12345\",\r\n    \"address\": \"Virudhunagar\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/stockmaintenance2/customer/create_customer.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance2",
+								"customer",
+								"create_customer.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update the customer",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"customer_id\": \"CUST_001\",\r\n    \"customer_name\": \"Surya\",\r\n    \"mobile_number\": \"9876543211\",\r\n    \"business_name\": \"Surya Enterprises\",\r\n    \"gst_number\": \"GST123\",\r\n    \"address\": \"Virudhunagar\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/stockmaintenance2/customer/update_customer.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance2",
+								"customer",
+								"update_customer.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"customer_id\": \"CUST_001\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/stockmaintenance2/customer/delete_customer.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance2",
+								"customer",
+								"delete_customer.php"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "sales",
+			"item": [
+				{
+					"name": "get sales",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost/stockmaintenance2/sales/view_sales.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance2",
+								"sales",
+								"view_sales.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create a Sales",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/stockmaintenance2/sales/view_sales.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance2",
+								"sales",
+								"view_sales.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update the Sales",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"sales_id\": \"679acbeadbd49\",\r\n  \"invoice_number\": \"INV/2025-01-29/001\",\r\n  \"sales_details\": [\r\n    {\r\n      \"unique_id\": \"679acbeae1c2d\",\r\n      \"product_id\": \"PROD-001\",\r\n      \"quantity\": \"160\",\r\n      \"mrp\": \"300.00\",\r\n      \"product\": \"Original\",\r\n      \"sales_through\": \"DMS Stock\"\r\n    }\r\n  ],\r\n  \"date\": \"2025-01-31\",\r\n  \"user_unique_id\": \"6777c310c6291\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/stockmaintenance5/sales/update_sales.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance5",
+								"sales",
+								"update_sales.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete the sales",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/stockmaintenance2/sales/delete_sales.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance2",
+								"sales",
+								"delete_sales.php"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "reports",
+			"item": [
+				{
+					"name": "view stock report",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "view long holding items",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "view fast moving items",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "view product report",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "view dashboard",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "stock adjustment",
+			"item": [
+				{
+					"name": "Create a stock adujstment",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"date\": \"2025-01-23\",\r\n    \"product_id\": \"PROD-002\",\r\n    \"mrp\": 2000,\r\n    \"adjusted_stock\": 15,\r\n    \"adjusted_type\": \"subtract\",\r\n    \"reason\": \"Damaged items\"\r\n}   ",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/stockmaintenance2/stock_adjustment/create_stock_adjustment.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance2",
+								"stock_adjustment",
+								"create_stock_adjustment.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update the stock adjustment",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"unique_id\": \"67923d85b8926\",\r\n    \"date\": \"2025-01-24\",\r\n    \"stock_id\": \"STO-003\",\r\n    \"adjusted_stock\": 20,\r\n    \"adjusted_type\": \"subtract\",\r\n    \"reason\": \"Damaged Stock\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/stockmaintenance2/stock_adjustment/update_stock_adjustment.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance2",
+								"stock_adjustment",
+								"update_stock_adjustment.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "view the stock adjustment",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "stock moment log",
+			"item": [
+				{
+					"name": "get all stock moment log",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "create a stock moment log",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost/stockmaintenance2/stock_moment_log/create_stock_moment_log.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance2",
+								"stock_moment_log",
+								"create_stock_moment_log.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update stock moment log",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/stockmaintenance2/stock_moment_log/update_stock_moment_log.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance2",
+								"stock_moment_log",
+								"update_stock_moment_log.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete the stock moment log",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost/stockmaintenance2/stock_moment_log/delete_stock_moment_log.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"stockmaintenance2",
+								"stock_moment_log",
+								"delete_stock_moment_log.php"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Notification action",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "http://localhost/stockmaintenance5/notification_action2.php",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"stockmaintenance5",
+						"notification_action2.php"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
