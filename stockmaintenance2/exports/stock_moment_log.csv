@@ -1,5 +1,0 @@
-ID,"Product Name",SKU,MRP,LOB,Inward,Outward,"Available Piece"
-1,"Engine Oil",501,200.00,Mobil,1,1,50
-2,"Engine Oil",501,300.00,Mobil,1,2,140
-3,"Oil Filter",502,500.00,Mobil,1,1,70
-4,"Oil Filter",502,600.00,Mobil,1,0,130
