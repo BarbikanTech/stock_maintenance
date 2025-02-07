@@ -17,7 +17,7 @@ try {
             pm.mrp AS MRP,
             pm.current_stock AS DMS,
             pm.excess_stock AS Excess_Pieces,
-            pm.physical_stock AS Physical,
+            pm.physical_stock AS Physical_Stock,
             pm.notification AS Notification
         FROM 
             product p
@@ -54,7 +54,7 @@ try {
             "DMS" => $row['DMS'],
             "Dms Liter" => $dmsLiter,
             "Excess_Pieces" => $row['Excess_Pieces'],
-            "Physical" => $physical
+            "Physical_Stock" => $row['Physical_Stock'],
         ];
 
         // Group data by product ID
