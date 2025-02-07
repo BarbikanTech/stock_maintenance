@@ -1,23 +1,19 @@
 <?php
 include '../dbconfig/config.php';
 
-$username = isset($_GET['username']) ? $_GET['username'] : die(json_encode(["success" => false, "message" => "Username not provided."]));
-
-$query = "SELECT id, unique_id, name_id, name, username, role, created_at 
-          FROM users WHERE username = :username AND deleted_at = 0";
+$query = "SELECT name, username, role FROM users WHERE deleted_at = 0";
 
 $stmt = $pdo->prepare($query);
-$stmt->bindParam(':username', $username);
 
 if ($stmt->execute()) {
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    if ($user) {
-        echo json_encode(["success" => true, "data" => $user]);
+    if ($users) {
+        echo json_encode(["success" => 200, "data" => $users]);
     } else {
-        echo json_encode(["success" => false, "message" => "User not found."]);
+        echo json_encode(["success" => 400, "message" => "No users found."]);
     }
 } else {
-    echo json_encode(["success" => false, "message" => "Failed to retrieve user."]);
+    echo json_encode(["success" => 400, "message" => "Failed to retrieve users."]);
 }
 ?>
