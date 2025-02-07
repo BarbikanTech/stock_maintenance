@@ -17,7 +17,9 @@ try {
                                 pm.opening_stock,
                                 pm.current_stock,
                                 pm.minimum_stock,
-                                pm.excess_stock
+                                pm.excess_stock,
+                                pm.physical_stock AS physical_stock,
+                                pm.notification AS notification
                            FROM 
                                 product p
                            LEFT JOIN 
@@ -45,12 +47,9 @@ try {
                 'mrp_details' => []
             ];
         }
-
-        // Calculate physical stock
-        $physicalStock = $row['current_stock'] + $row['excess_stock'];
-
-        // Determine if notification is needed (if current stock is less than minimum stock)
-        $notification = ($row['current_stock'] < $row['minimum_stock']) ? 'Low stock warning' : '';
+ 
+        // Format physical stock and notification
+        $physicalStock = is_numeric($row['physical_stock']) ? $row['physical_stock'] . ' ' . $row['notification'] : $row['notification'];
 
         // Add MRP details including physical stock and notification
         $products[$productId]['mrp_details'][] = [
@@ -59,8 +58,7 @@ try {
             'current_stock' => $row['current_stock'],
             'minimum_stock' => $row['minimum_stock'],
             'excess_stock' => $row['excess_stock'],
-            'physical_stock' => $physicalStock,
-            'notification' => $notification
+            'physical_stock' => $physicalStock 
         ];
     }
 
