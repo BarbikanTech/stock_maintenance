@@ -1,4 +1,10 @@
 <?php
+
+// Allow CORS for all origins (Adjust as needed)
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Content-Type: application/json");
 include '../dbconfig/config.php';
 
 // Get data from POST request
@@ -9,7 +15,7 @@ if (isset($data->name) && isset($data->username) && isset($data->password) && is
     $name = htmlspecialchars(strip_tags($data->name));
     $username = htmlspecialchars(strip_tags($data->username));
     $password = htmlspecialchars(strip_tags($data->password));
-    $role = htmlspecialchars(strip_tags($data->role));
+    $role = htmlspecialchars(strip_tags($data->role));      
     
     // Hash password
     $hashed_password = password_hash($password, PASSWORD_BCRYPT);
