@@ -35,13 +35,10 @@ try {
 
     // Process the data
     foreach ($results as $row) {
-        $id = $row['ID'];
-
-        // Format DMS Liter with Subunit text
-        $dmsLiter = is_numeric($row['DMS']) ? $row['DMS'] . ' ' . $row['Subunit'] : $row['Subunit'];
+        $id = $row['ID']; 
 
         // Format Physical Notification text
-        $physical = $row['Notification'] ? $row['Physical'] . ' ' . $row['Notification'] : null;
+        $physical = is_numeric($row['Physical_Stock']) ? $row['Physical_Stock'] . ' ' . $row['Notification'] : $row['Notification'];
 
         // Prepare the MRP details
         $mrpDetails = [
@@ -51,10 +48,9 @@ try {
             "SKU" => $row['SKU'],
             "Subunit" => $row['Subunit'],
             "MRP" => $row['MRP'],
-            "DMS" => $row['DMS'],
-            "Dms Liter" => $dmsLiter,
+            "DMS" => $row['DMS'], 
             "Excess_Pieces" => $row['Excess_Pieces'],
-            "Physical_Stock" => $row['Physical_Stock'],
+            "Physical_Stock" => $physical
         ];
 
         // Group data by product ID
