@@ -9,12 +9,12 @@ include '../dbconfig/config.php';
 if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
     $data = json_decode(file_get_contents("php://input"));
 
-    if (isset($data->username)) {
-        $username = $data->username;
+    if (isset($data->id)) {
+        $id = $data->id;
 
-        $query = "UPDATE users SET deleted_at = 1 WHERE username = :username AND deleted_at = 0";
+        $query = "UPDATE users SET deleted_at = 1 WHERE id = :id AND deleted_at = 0";
         $stmt = $pdo->prepare($query);
-        $stmt->bindParam(':username', $username);
+        $stmt->bindParam(':id', $id);
         $stmt->execute();
 
         if ($stmt->rowCount() > 0) {
