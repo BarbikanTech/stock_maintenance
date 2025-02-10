@@ -12,12 +12,16 @@ header("Content-Type: application/json");
 try {
     // Query to fetch product details excluding soft-deleted products and related MRP data
     $stmt = $pdo->prepare("SELECT 
+                                p.id,
+                                p.unique_id,
                                 p.product_id, 
                                 p.product_name, 
                                 p.sku, 
                                 p.unit, 
                                 p.subunit, 
                                 p.date,
+                                pm.id,
+                                pm.unique_id,
                                 pm.mrp,
                                 pm.opening_stock,
                                 pm.current_stock,
@@ -43,6 +47,8 @@ try {
         // Organize product data and group MRP details
         if (!isset($products[$productId])) {
             $products[$productId] = [
+                'id' => $row['id'],
+                'unique_id' => $row['unique_id'],
                 'product_id' => $row['product_id'],
                 'product_name' => $row['product_name'],
                 'sku' => $row['sku'],
@@ -58,6 +64,8 @@ try {
 
         // Add MRP details including physical stock and notification
         $products[$productId]['mrp_details'][] = [
+            'id' => $row['id'],
+            'unique_id' => $row['unique_id'],
             'mrp' => $row['mrp'],
             'opening_stock' => $row['opening_stock'],
             'current_stock' => $row['current_stock'],
