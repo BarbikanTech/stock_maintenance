@@ -9,7 +9,7 @@ include 'dbconfig/config.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'GET') {
     try {
-        $query = "SELECT * FROM stock_history WHERE deleted_at = 0 ORDER BY created_date DESC";
+        $query = "SELECT * FROM stock_history WHERE deleted_at = 0 ORDER BY id ASC";
         $stmt = $pdo->prepare($query);
         $stmt->execute();
         
