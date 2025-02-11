@@ -7,7 +7,7 @@ header("Content-Type: application/json");
 
 include '../dbconfig/config.php';
 
-$query = "SELECT id, unique_id, name, username, role FROM users WHERE deleted_at = 0";
+$query = "SELECT id, unique_id, name, username, role, password FROM users WHERE deleted_at = 0";
 
 $stmt = $pdo->prepare($query);
 
