@@ -1,60 +1,93 @@
 <?php
-// Allow CORS for all origins
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('log_errors', 1);
+ini_set('error_log', '../logs/error_log.txt');
+
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Methods: PUT, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json");
 
 include '../dbconfig/config.php';
 
-if ($_SERVER['REQUEST_METHOD'] == 'PUT') {
+try {
+    // Only allow PUT requests
+    if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
+        throw new Exception("Invalid request method. Only PUT is allowed.");
+    }
+
+    // Read JSON input
     $data = json_decode(file_get_contents("php://input"));
 
-    if (isset($data->unique_id) && (isset($data->name) || isset($data->role) || isset($data->password))) {
-        $unique_id = $data->unique_id;
-        $name = isset($data->name) ? $data->name : null;
-        $role = isset($data->role) ? $data->role : null;
-        $newPassword = isset($data->password) ? $data->password : null;
+    // Validate unique_id
+    if (!isset($data->unique_id)) {
+        throw new Exception("Missing required field: unique_id.");
+    }
 
-        $query = "SELECT * FROM users WHERE unique_id = :unique_id AND deleted_at = 0";
+    $unique_id = htmlspecialchars(strip_tags($data->unique_id));
+
+    // Fetch existing user details
+    $query = "SELECT * FROM users WHERE unique_id = :unique_id AND deleted_at = 0";
+    $stmt = $pdo->prepare($query);
+    $stmt->bindParam(':unique_id', $unique_id);
+    $stmt->execute();
+    
+    if ($stmt->rowCount() === 0) {
+        throw new Exception("User not found.");
+    }
+
+    // Fields to update
+    $updates = [];
+    $params = [':unique_id' => $unique_id];
+
+    if (isset($data->name)) {
+        $updates[] = "name = :name";
+        $params[':name'] = htmlspecialchars(strip_tags($data->name));
+    }
+
+    if (isset($data->username)) {
+        $new_username = htmlspecialchars(strip_tags($data->username));
+
+        // Check if username already exists
+        $query = "SELECT COUNT(*) FROM users WHERE username = :username AND unique_id != :unique_id";
         $stmt = $pdo->prepare($query);
+        $stmt->bindParam(':username', $new_username);
         $stmt->bindParam(':unique_id', $unique_id);
         $stmt->execute();
 
-        if ($stmt->rowCount() > 0) {
-            if ($name) {
-                $updateNameQuery = "UPDATE users SET name = :name WHERE unique_id = :unique_id";
-                $updateStmt = $pdo->prepare($updateNameQuery);
-                $updateStmt->bindParam(':name', $name);
-                $updateStmt->bindParam(':unique_id', $unique_id);
-                $updateStmt->execute();
-            }
-
-            if ($newPassword) {
-                $hashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
-                $updatePasswordQuery = "UPDATE users SET password = :password WHERE unique_id = :unique_id";
-                $updateStmt = $pdo->prepare($updatePasswordQuery);
-                $updateStmt->bindParam(':password', $hashedPassword);
-                $updateStmt->bindParam(':unique_id', $unique_id);
-                $updateStmt->execute();
-            }
-
-            if ($role) {
-                $updateRoleQuery = "UPDATE users SET role = :role WHERE unique_id = :unique_id";
-                $updateStmt = $pdo->prepare($updateRoleQuery);
-                $updateStmt->bindParam(':role', $role);
-                $updateStmt->bindParam(':unique_id', $unique_id);
-                $updateStmt->execute();
-            }
-
-            echo json_encode(["success" => true, "message" => "User updated successfully."]);
-        } else {
-            echo json_encode(["success" => false, "message" => "User not found."]);
+        if ($stmt->fetchColumn() > 0) {
+            throw new Exception("Username already exists. Choose a different one.");
         }
-    } else {
-        echo json_encode(["success" => false, "message" => "Invalid input data."]);
+
+        $updates[] = "username = :username";
+        $params[':username'] = $new_username;
     }
-} else {
-    echo json_encode(["success" => false, "message" => "Invalid request method."]);
+
+    if (isset($data->password)) {
+        $updates[] = "password = :password";
+        $params[':password'] = password_hash($data->password, PASSWORD_BCRYPT);
+    }
+
+    if (isset($data->role)) {
+        $updates[] = "role = :role";
+        $params[':role'] = htmlspecialchars(strip_tags($data->role));
+    }
+
+    // If no updates, return error
+    if (empty($updates)) {
+        throw new Exception("No fields to update.");
+    }
+
+    // Prepare and execute update query
+    $query = "UPDATE users SET " . implode(', ', $updates) . " WHERE unique_id = :unique_id";
+    $stmt = $pdo->prepare($query);
+    $stmt->execute($params);
+
+    echo json_encode(["success" => 200, "message" => "User updated successfully."]);
+} catch (Exception $e) {
+    error_log("Error: " . $e->getMessage());
+    echo json_encode(["success" => 400, "message" => $e->getMessage()]);
 }
 ?>
