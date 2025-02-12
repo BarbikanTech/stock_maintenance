@@ -7,7 +7,7 @@ ini_set('error_log', '../logs/error_log.txt');
 
 // Allow CORS for all origins
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: DELETE, OPTIONS");
+header("Access-Control-Allow-Methods: DELETE, OPTIONS, POST, GET");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json");
 
@@ -32,17 +32,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
             $deleteStmt->bindParam(':unique_id', $unique_id);
 
             if ($deleteStmt->execute()) {
-                echo json_encode(["success" => 200, "message" => "User deleted successfully."]);
+                echo json_encode(["success" => 200, "message" => "User deleted successfully."]);  // User deleted successfully
             } else {
-                echo json_encode(["success" => 400, "message" => "Failed to delete user."]);
+                echo json_encode(["success" => 400, "message" => "Failed to delete user."]);  // Failed to delete user
             }
         } else {
-            echo json_encode(["success" => 400, "message" => "User not found or already deleted."]);
+            echo json_encode(["success" => 400, "message" => "User not found or already deleted."]);  // User not found or already deleted 
         }
     } else {
-        echo json_encode(["success" => 400, "message" => "Invalid input data."]);
+        echo json_encode(["success" => 400, "message" => "Invalid input data."]); // Data is incomplete or invalid (missing unique_id)
     }
 } else {
-    echo json_encode(["success" => 400, "message" => "Invalid request method."]);
+    echo json_encode(["success" => 400, "message" => "Invalid request method."]);  // Invalid request method used (not DELETE)
 }
 ?>
