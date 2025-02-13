@@ -13,9 +13,9 @@ try {
     // excluding records with deleted_at = 1 (soft deleted).
     $stmt = $pdo->prepare("
         SELECT 
-            p.id, p.unique_id, p.date, p.order_id, p.vendor_id, p.vendor_name, p.mobile_number, p.business_name, p.gst_number, 
-            p.address, p.invoice_number, p.created_date, 
-            vd.unique_id, vd.product_id, vd.product_name, vd.sku, vd.quantity, vd.mrp
+            p.id, p.unique_id AS purchase_unique_id, p.date, p.order_id, p.vendor_id, p.vendor_name, 
+            p.mobile_number, p.business_name, p.gst_number, p.address, p.invoice_number, p.created_date, 
+            vd.unique_id AS product_unique_id, vd.product_id, vd.product_name, vd.sku, vd.quantity, vd.mrp
         FROM purchase p
         LEFT JOIN purchase_mrp vd ON p.order_id = vd.order_id
         WHERE (p.deleted_at IS NULL OR p.deleted_at = 0)  -- Only include records not soft deleted
@@ -30,7 +30,7 @@ try {
         if (!isset($purchases[$orderId])) {
             $purchases[$orderId] = [
                 'id' => $row['id'],
-                'unique_id' => $row['unique_id'],
+                'unique_id' => $row['purchase_unique_id'], // Renamed for clarity
                 'date' => $row['date'],
                 'order_id' => $row['order_id'],
                 'vendor_id' => $row['vendor_id'],
@@ -45,14 +45,17 @@ try {
             ];
         }
 
-        $purchases[$orderId]['products'][] = [
-            'unique_id' => $row['unique_id'],
-            'product_id' => $row['product_id'],
-            'product_name' => $row['product_name'],
-            'sku' => $row['sku'],
-            'quantity' => $row['quantity'],
-            'mrp' => $row['mrp']
-        ];
+        // Add product only if it exists (avoid adding empty product data)
+        if (!empty($row['product_id'])) {
+            $purchases[$orderId]['products'][] = [
+                'unique_id' => $row['product_unique_id'], // Renamed for clarity
+                'product_id' => $row['product_id'],
+                'product_name' => $row['product_name'],
+                'sku' => $row['sku'],
+                'quantity' => $row['quantity'],
+                'mrp' => $row['mrp']
+            ];
+        }
     }
 
     // Return the response with all purchase records and product details
