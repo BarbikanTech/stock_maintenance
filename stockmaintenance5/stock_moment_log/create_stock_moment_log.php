@@ -1,12 +1,20 @@
 <?php
-// Allow CORS for all origins (Adjust as needed)
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json");
+
 require '../dbconfig/config.php';
 
-// Retrieve JSON input
+// Check database connection
+if (!$pdo) {
+    echo json_encode(['error' => 'Database connection failed.']);
+    exit;
+}
+
 $input = file_get_contents("php://input");
 $data = json_decode($input, true);
 
@@ -21,9 +29,11 @@ $mrp = $data['mrp'];
 $lob = $data['lob'];
 
 try {
-    // Get product details
     $stmt = $pdo->prepare("SELECT product_name, sku FROM product WHERE product_id = :product_id");
-    $stmt->execute(['product_id' => $product_id]);
+    if (!$stmt->execute(['product_id' => $product_id])) {
+        echo json_encode(['error' => 'Error fetching product details.']);
+        exit;
+    }
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$product) {
@@ -31,22 +41,20 @@ try {
         exit;
     }
 
-    $product_name = $product['product_name'];
-    $sku = $product['sku'];
-
-    // Get physical_stock from product_mrp table
     $stmt = $pdo->prepare("SELECT physical_stock FROM product_mrp WHERE product_id = :product_id AND mrp = :mrp");
-    $stmt->execute(['product_id' => $product_id, 'mrp' => $mrp]);
+    if (!$stmt->execute(['product_id' => $product_id, 'mrp' => $mrp])) {
+        echo json_encode(['error' => 'Error fetching product MRP details.']);
+        exit;
+    }
     $product_mrp = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$product_mrp) {
-        echo json_encode(['error' => 'MRP not found for the product.']);
+    if (!$product_mrp || !isset($product_mrp['physical_stock'])) {
+        echo json_encode(['error' => 'MRP not found or missing physical_stock.']);
         exit;
     }
 
     $physical_stock = $product_mrp['physical_stock'];
 
-    // Calculate inward and outward from stock_history
     $stmt = $pdo->prepare("
         SELECT 
             SUM(CASE WHEN types = 'inward' THEN 1 ELSE 0 END) AS inward_count,
@@ -54,45 +62,35 @@ try {
         FROM stock_history 
         WHERE mrp = :mrp
     ");
-    $stmt->execute(['mrp' => $mrp]);
+    if (!$stmt->execute(['mrp' => $mrp])) {
+        echo json_encode(['error' => 'Error fetching stock history.']);
+        exit;
+    }
     $counts = $stmt->fetch(PDO::FETCH_ASSOC);
 
     $inward_count = $counts['inward_count'] ?? 0;
     $outward_count = $counts['outward_count'] ?? 0;
 
-    // Calculate available pieces
-    $available_piece = $physical_stock;
-
-    // Insert into stock_moment_log
-    $unique_id = uniqid(" ");
+    $unique_id = uniqid();
     $stmt = $pdo->prepare("INSERT INTO stock_moment_log (unique_id, date, product_id, product_name, sku, mrp, lob, inward, outward, available_piece) 
                            VALUES (:unique_id, :date, :product_id, :product_name, :sku, :mrp, :lob, :inward, :outward, :available_piece)");
-    $stmt->execute([
+    if (!$stmt->execute([
         'unique_id' => $unique_id,
         'date' => $date,
         'product_id' => $product_id,
-        'product_name' => $product_name,
-        'sku' => $sku,
+        'product_name' => $product['product_name'],
+        'sku' => $product['sku'],
         'mrp' => $mrp,
         'lob' => $lob,
         'inward' => $inward_count,
         'outward' => $outward_count,
-        'available_piece' => $available_piece
-    ]);
-
-    // Generate CSV file
-    $stmt = $pdo->query("SELECT id, product_name, sku, mrp, lob, inward, outward, available_piece FROM stock_moment_log");
-    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    $csvFile = '../exports/stock_moment_log.csv';
-    $file = fopen($csvFile, 'w');
-    fputcsv($file, ['ID', 'Product Name', 'SKU', 'MRP', 'LOB', 'Inward', 'Outward', 'Available Piece']);
-    foreach ($results as $row) {
-        fputcsv($file, $row);
+        'available_piece' => $physical_stock
+    ])) {
+        echo json_encode(['error' => 'Error inserting stock log.']);
+        exit;
     }
-    fclose($file);
 
-    echo json_encode(['success' => 'Data logged and CSV generated successfully.', 'csv_file' => $csvFile]);
+    echo json_encode(['success' => 'Data logged successfully.']);
 } catch (PDOException $e) {
     echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
 }
