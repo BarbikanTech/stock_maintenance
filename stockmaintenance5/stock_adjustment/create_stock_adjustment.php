@@ -98,7 +98,7 @@ try {
         $updateNotificationStmt->bindParam(':mrp', $mrp); 
         $updateNotificationStmt->execute();
     } else {
-        $updateNotificationStmt = $pdo->prepare("UPDATE product_mrp SET notification = NULL WHERE product_id = :productId AND mrp = :mrp");
+        $updateNotificationStmt = $pdo->prepare("UPDATE product_mrp SET notification = '' WHERE product_id = :productId AND mrp = :mrp");
         $updateNotificationStmt->bindParam(':productId', $productId);
         $updateNotificationStmt->bindParam(':mrp', $mrp); 
         $updateNotificationStmt->execute();
