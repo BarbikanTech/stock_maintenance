@@ -14,7 +14,7 @@ $input = json_decode(file_get_contents('php://input'), true);
 // Validate required fields
 if (!isset($input['sales_id'], $input['invoice_number'], $input['sales_details'], $input['user_unique_id'])) {
     echo json_encode([
-        'status' => 'error',
+        'status' => '400',
         'message' => 'Missing required fields'
     ]);
     exit;
@@ -35,7 +35,7 @@ try {
 
     if (!$user) {
         echo json_encode([
-            'status' => 'error',
+            'status' => '400',
             'message' => 'User not found'
         ]);
         exit;
@@ -53,7 +53,7 @@ try {
 
     if (!$sale) {
         echo json_encode([
-            'status' => 'error',
+            'status' => '400',
             'message' => 'Sale not found'
         ]);
         exit;
@@ -67,7 +67,7 @@ try {
     foreach ($salesDetails as $salesDetail) {
         if (!isset($salesDetail['unique_id'], $salesDetail['product_id'], $salesDetail['quantity'], $salesDetail['mrp'], $salesDetail['product'], $salesDetail['sales_through'])) {
             echo json_encode([
-                'status' => 'error',
+                'status' => '400',
                 'message' => 'Missing required fields for a product'
             ]);
             exit;
@@ -87,7 +87,7 @@ try {
 
         if (!$product) {
             echo json_encode([
-                'status' => 'error',
+                'status' => '400',
                 'message' => 'Product not found for the given MRP'
             ]);
             exit;
@@ -107,7 +107,7 @@ try {
 
         if (!$productMRP) {
             echo json_encode([
-                'status' => 'error',
+                'status' => '400',
                 'message' => 'Product MRP details not found'
             ]);
             exit;
@@ -134,7 +134,7 @@ try {
         }
 
         echo json_encode([
-            'status' => 'success',
+            'status' => '200',
             'message' => 'Stock update requests sent to admin for approval'
         ]);
         exit;
@@ -149,7 +149,7 @@ try {
 
         if (!$salesDetail) {
             echo json_encode([
-                'status' => 'error',
+                'status' => '400',
                 'message' => 'Sales record not found'
             ]);
             exit;
@@ -165,7 +165,7 @@ try {
             $oldQuantity = (int)$oldQuantityParts[0]; // Extract old quantity as integer
         } else {
             echo json_encode([
-                'status' => 'error',
+                'status' => '400',
                 'message' => 'Invalid quantity format in the existing sales record'
             ]);
             exit;
@@ -285,7 +285,7 @@ try {
 
         // Collect response for this product update
         $responses[] = [
-            'status' => 'success',
+            'status' => '200',
             'product_id' => $productId,
             'quantity' => $quantityWithUnit,
             'physical_stock' => $productMRP['physical_stock'], // Assuming this is your final stock
@@ -303,7 +303,7 @@ try {
 } catch (PDOException $e) {
     $pdo->rollBack();
     echo json_encode([
-        'status' => 'error',
+        'status' => '400',
         'message' => 'Database error occurred: ' . $e->getMessage()
     ]);
 }
