@@ -1,10 +1,30 @@
 <?php
-header('Content-Type: application/json');
+// Allow CORS for all origins (Adjust as needed)
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header('Content-Type: application/json'); 
 
 // Include database configuration       
 require_once '../dbconfig/config.php';
 
 try {
+    // Read the JSON input
+    $inputData = json_decode(file_get_contents("php://input"), true);
+
+    // Validate input dates
+    if (!isset($inputData['from_date']) || !isset($inputData['to_date'])) {
+        echo json_encode([
+            'status' => '400',
+            'message' => 'Missing from_date or to_date'
+        ]);
+        exit;
+    }
+
+    // Convert dates to Y-m-d format
+    $fromDate = date('Y-m-d', strtotime($inputData['from_date']));
+    $toDate = date('Y-m-d', strtotime($inputData['to_date']));
+
     // Define the threshold date for 6 months ago
     $sixMonthsAgo = date('Y-m-d', strtotime('-6 months'));
 
@@ -13,24 +33,26 @@ try {
         SELECT 
             pm.mrp AS `MRP`,
             p.id AS `ID`,
-            p.product_id AS `Product ID`,
-            p.product_name AS `Product Name`,
+            p.product_id AS `Product_ID`,
+            p.product_name AS `Product_Name`,
             p.sku AS `SKU`,
             CASE
                 WHEN NOT EXISTS (
                     SELECT 1 
                     FROM sales_mrp sm
+                    INNER JOIN sales s ON sm.id = s.id
                     WHERE sm.product_id = pm.product_id
                     AND sm.mrp = pm.mrp 
-                    AND sm.created_date >= :six_months_ago
+                    AND s.created_date BETWEEN :from_date AND :to_date
                 ) THEN 'Hold'
                 WHEN (
                     SELECT SUM(sm.quantity)
                     FROM sales_mrp sm
+                    INNER JOIN sales s ON sm.id = s.id
                     WHERE sm.product_id = pm.product_id 
                     AND sm.mrp = pm.mrp 
-                    AND sm.created_date >= :six_months_ago
-                ) BETWEEN 1 AND 10 THEN 'Light Move'
+                    AND s.created_date BETWEEN :from_date AND :to_date
+                ) BETWEEN 1 AND 20 THEN 'Light Move'
                 ELSE 'Active'
             END AS `Status`
         FROM 
@@ -40,7 +62,12 @@ try {
         ORDER BY 
             p.id ASC, pm.mrp ASC
     ");
-    $stmt->execute(['six_months_ago' => $sixMonthsAgo]);
+
+    // Bind parameters
+    $stmt->execute([
+        'from_date' => $fromDate,
+        'to_date' => $toDate
+    ]);
 
     // Fetch all results
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -50,15 +77,15 @@ try {
     $groupedData = [];
 
     foreach ($results as $row) {
-        $productId = $row['Product ID'];
+        $productId = $row['Product_ID'];
 
         // Only include MRP details if the status is 'Hold'
         if ($row['Status'] == 'Hold') {
             if (!isset($groupedData[$productId])) {
                 $groupedData[$productId] = [
                     'ID' => $row['ID'],
-                    'Product ID' => $row['Product ID'],
-                    'Product Name' => $row['Product Name'],
+                    'Product_ID' => $row['Product_ID'],
+                    'Product_Name' => $row['Product_Name'],
                     'SKU' => $row['SKU'],
                     'mrp_details' => []
                 ];
@@ -79,7 +106,8 @@ try {
 
     // Output the JSON response
     echo json_encode([
-        'status' => 'success',
+        'status' => '200',
+        'six_months_ago' => $sixMonthsAgo, // Including the threshold date in the response
         'products' => $products
     ]);
 } catch (PDOException $e) {
@@ -88,10 +116,9 @@ try {
 
     // Return error response
     echo json_encode([
-        'status' => 'error',
+        'status' => '400',
         'message' => 'Database error occurred',
         'error_details' => $e->getMessage()
     ]);
 }
-
 ?>
