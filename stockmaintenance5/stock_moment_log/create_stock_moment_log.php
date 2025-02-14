@@ -90,7 +90,7 @@ try {
         exit;
     }
 
-    echo json_encode(['success' => 'Data logged successfully.']);
+    echo json_encode(['success' => '200', 'message' => 'Data logged successfully.']);
 } catch (PDOException $e) {
     echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
 }
