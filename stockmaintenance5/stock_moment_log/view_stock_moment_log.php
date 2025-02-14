@@ -27,7 +27,7 @@ try {
         LEFT JOIN 
             product p ON sm.product_id = p.product_id
         ORDER BY 
-            sm.date ASC
+            sm.product_id ASC
     ");
     $stmt->execute();
 
