@@ -15,7 +15,7 @@ try {
 
     // Format response
     $response = [
-        'status' => 'success',
+        'status' => '200',
         'data' => $results
     ];
 
