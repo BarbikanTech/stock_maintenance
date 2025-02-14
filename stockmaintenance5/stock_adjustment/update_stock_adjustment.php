@@ -102,7 +102,7 @@ try {
     if ($newPhysicalStock <= $originalStockData['minimum_stock']) { 
         $updateNotificationStmt = $pdo->prepare("UPDATE product_mrp SET notification = 'Low stock warning' WHERE product_id = :productId AND mrp = :mrp");
     } else {
-        $updateNotificationStmt = $pdo->prepare("UPDATE product_mrp SET notification = NULL WHERE product_id = :productId AND mrp = :mrp");
+        $updateNotificationStmt = $pdo->prepare("UPDATE product_mrp SET notification = '' WHERE product_id = :productId AND mrp = :mrp");
     }
     $updateNotificationStmt->bindParam(':productId', $adjustment['product_id']);
     $updateNotificationStmt->bindParam(':mrp', $adjustment['mrp']);
