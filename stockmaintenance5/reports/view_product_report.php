@@ -1,58 +1,49 @@
 <?php
-header('Content-Type: application/json');
+// Allow CORS for all origins (Adjust as needed)
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header('Content-Type: application/json'); 
 
 // Include database configuration
 require_once '../dbconfig/config.php';
 
+// Get JSON input
+$input = json_decode(file_get_contents("php://input"), true);
+
+$from_date = isset($input['from_date']) ? date('Y-m-d', strtotime($input['from_date'])) : null;
+$to_date = isset($input['to_date']) ? date('Y-m-d', strtotime($input['to_date'])) : null;
+
+if (!$from_date || !$to_date) {
+    echo json_encode([
+        'status' => '400',
+        'message' => 'Invalid or missing date range'
+    ]);
+    exit;
+}
+
 try {
-    // Query to fetch products, their MRP details, and both Purchase and Sales quantities
-    $stmt = $pdo->prepare("
+    // Query to fetch products, their MRP details, and both Purchase and Sales quantities within date range
+    $stmt = $pdo->prepare("  
         SELECT 
-            p.id AS `ID`,
-            p.product_id AS `Product ID`,
-            p.product_name AS `Product Name`,
-            p.sku AS `SKU`,
-            pm.mrp AS `MRP`,
-            COALESCE(
-                (
-                    SELECT 
-                        SUM(sm.quantity)
-                    FROM sales_mrp sm
-                    WHERE sm.product_id = p.product_id AND sm.mrp = pm.mrp
-                ), 0) AS `Sales`,
-            COALESCE(
-                (
-                    SELECT 
-                        SUM(pur_mrp.quantity)
-                    FROM purchase_mrp pur_mrp
-                    WHERE pur_mrp.product_id = p.product_id AND pur_mrp.mrp = pm.mrp
-                ), 0) AS `Purchase`,
-            COALESCE(
-                (
-                    SELECT 
-                        CASE 
-                            WHEN SUM(sm.quantity) = 0 THEN 'Hold'
-                            WHEN SUM(sm.quantity) BETWEEN 1 AND 10 THEN 'Light Move'
-                            ELSE NULL
-                        END
-                    FROM sales_mrp sm
-                    WHERE sm.product_id = p.product_id AND sm.mrp = pm.mrp
-                ),
-                'Hold'
-            ) AS `Status`
-        FROM 
-            product p
-        LEFT JOIN 
-            product_mrp pm ON p.product_id = pm.product_id
-        WHERE EXISTS (
-            SELECT 1 
-            FROM sales_mrp sm
-            WHERE sm.product_id = p.product_id AND sm.mrp = pm.mrp
-        )
-        ORDER BY 
-            p.id ASC, pm.mrp ASC
+            p.id AS ID,
+            p.product_id AS Product_ID,
+            p.product_name AS Product_Name,
+            p.sku AS SKU,
+            sh.mrp AS MRP,
+            COALESCE(SUM(CASE WHEN sh.types = 'inward' THEN sh.quantity ELSE 0 END), 0) AS Purchase,
+            COALESCE(SUM(CASE WHEN sh.types = 'outward' THEN sh.quantity ELSE 0 END), 0) AS Sales
+        FROM stock_history sh
+        INNER JOIN product p ON sh.product_id = p.product_id
+        WHERE sh.created_date BETWEEN :from_date AND :to_date
+        GROUP BY sh.product_id, sh.mrp
+        ORDER BY p.id ASC, sh.mrp ASC
     ");
-    $stmt->execute();
+
+    $stmt->execute([
+        ':from_date' => $from_date,
+        ':to_date' => $to_date
+    ]);
 
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -61,46 +52,37 @@ try {
     $groupedData = [];
 
     foreach ($results as $row) {
-        $productId = $row['Product ID'];
+        $productId = $row['Product_ID'];
 
-        // Grouping product details and MRP details together
         if (!isset($groupedData[$productId])) {
             $groupedData[$productId] = [
                 'ID' => $row['ID'],
-                'Product ID' => $row['Product ID'],
-                'Product Name' => $row['Product Name'],
+                'Product ID' => $row['Product_ID'],
+                'Product Name' => $row['Product_Name'],
                 'SKU' => $row['SKU'],
                 'mrp_details' => []
             ];
         }
 
-        // Only add MRP details with valid statuses (Light Move or Hold with sales)
-        if ($row['Status']) {
-            $groupedData[$productId]['mrp_details'][] = [
-                'MRP' => $row['MRP'],
-                'Purchase' => $row['Purchase'],
-                'Sales' => $row['Sales']
-            ];
-        }
+        $groupedData[$productId]['mrp_details'][] = [
+            'MRP' => number_format($row['MRP'], 2),
+            'Purchase' => (int)$row['Purchase'],
+            'Sales' => (int)$row['Sales']
+        ];
     }
 
-    // Convert grouped data to indexed array
     foreach ($groupedData as $product) {
         $products[] = $product;
     }
 
-    // Output the JSON response
     echo json_encode([
-        'status' => 'success',
+        'status' => '200',
         'products' => $products
     ]);
 } catch (PDOException $e) {
-    // Log error for debugging
     error_log('Database error: ' . $e->getMessage());
-
-    // Return error response
     echo json_encode([
-        'status' => 'error',
+        'status' => '400',
         'message' => 'Database error occurred',
         'error_details' => $e->getMessage()
     ]);
