@@ -50,7 +50,7 @@ try {
 
     if ($adjustedType === 'subtract') {
         $newCurrentStock = $stockData['current_stock'] - $adjustedStock;
-    } else ($adjustedType === 'add') { 
+    } else { 
         $newCurrentStock = $stockData['current_stock'] + $adjustedStock;
     }
 
