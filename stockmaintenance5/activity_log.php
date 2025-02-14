@@ -8,7 +8,7 @@ require_once 'dbconfig/config.php';
 
 try {
     // Fetch all activity logs
-    $stmt = $pdo->prepare("SELECT id, unique_id, staff_id, staff_name, table_type, created_date, admin_confirmation FROM notifications WHERE deleted_at = 0 ORDER BY id ASC");
+    $stmt = $pdo->prepare("SELECT id, unique_id, staff_id, staff_name, table_type, update_quantity, created_date, admin_confirmation FROM notifications WHERE deleted_at = 0 ORDER BY id ASC");
     $stmt->execute();
     $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
