@@ -9,7 +9,7 @@ require_once '../dbconfig/config.php';
 
 try {
     // Fetch only active stock adjustments (where deleted_at = 0)
-    $stmt = $pdo->prepare("SELECT * FROM stock_adjustment WHERE deleted_at = 0 ORDER BY created_date DESC");
+    $stmt = $pdo->prepare("SELECT * FROM stock_adjustment WHERE deleted_at = 0 ORDER BY created_date ASC");
     $stmt->execute();
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
