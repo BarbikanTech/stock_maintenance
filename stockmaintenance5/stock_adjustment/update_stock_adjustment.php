@@ -108,7 +108,7 @@ try {
     $updateNotificationStmt->bindParam(':mrp', $adjustment['mrp']);
     $updateNotificationStmt->execute();
 
-    echo json_encode(['message' => 'Stock adjustment updated successfully']);
+    echo json_encode(['data' => '200', 'message' => 'Stock adjustment updated successfully']);
 
 } catch (PDOException $e) {
     http_response_code(500);
