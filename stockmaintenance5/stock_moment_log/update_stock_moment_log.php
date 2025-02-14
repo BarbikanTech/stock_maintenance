@@ -131,7 +131,7 @@ try {
             'available_piece' => $available_piece
         ]);
 
-        echo json_encode(['success' => 'New data inserted successfully.']);
+        echo json_encode(['success' => '200', 'message' => 'New data inserted successfully.']);
     }
 
 } catch (PDOException $e) {
