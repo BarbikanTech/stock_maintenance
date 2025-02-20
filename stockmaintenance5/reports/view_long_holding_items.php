@@ -93,6 +93,10 @@ try {
 
             // Add MRP details with 'Hold' status
             $groupedData[$productId]['mrp_details'][] = [
+                'ID' => $row['ID'],
+                'Product_ID' => $row['Product_ID'],
+                'Product_Name' => $row['Product_Name'],
+                'SKU' => $row['SKU'],
                 'MRP' => $row['MRP'],
                 'Status' => $row['Status']
             ];
