@@ -57,8 +57,8 @@ try {
         if (!isset($groupedData[$productId])) {
             $groupedData[$productId] = [
                 'ID' => $row['ID'],
-                'Product ID' => $row['Product_ID'],
-                'Product Name' => $row['Product_Name'],
+                'Product_ID' => $row['Product_ID'],
+                'Product_Name' => $row['Product_Name'],
                 'SKU' => $row['SKU'],
                 'mrp_details' => []
             ];
