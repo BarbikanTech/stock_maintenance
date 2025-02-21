@@ -14,7 +14,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once '../dbconfig/config.php';
 
+ 
+
 $data = json_decode(file_get_contents('php://input'), true);
+
+ 
 
 if (!isset($data['unique_id'])) {
     http_response_code(400);
@@ -22,7 +26,11 @@ if (!isset($data['unique_id'])) {
     exit;
 }
 
+ 
+
 $uniqueId = $data['unique_id'];
+
+ 
 
 try {
     // Get existing adjustment record
@@ -31,17 +39,23 @@ try {
     $stmt->execute();
     $adjustment = $stmt->fetch(PDO::FETCH_ASSOC);
 
+ 
+
     if (!$adjustment) {
         http_response_code(404);
         echo json_encode(['error' => 'Stock adjustment not found']);
         exit;
     }
 
+ 
+
     // Get product details 
     $stmt = $pdo->prepare("SELECT product_name FROM product WHERE product_id = :productId");
     $stmt->bindParam(':productId', $adjustment['product_id']);
     $stmt->execute();
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+ 
 
     // Get original stock data (including minimum_stock)
     $stmt = $pdo->prepare("SELECT current_stock, excess_stock, minimum_stock FROM product_mrp WHERE product_id = :productId AND mrp = :mrp"); 
@@ -50,11 +64,15 @@ try {
     $stmt->execute();
     $originalStockData = $stmt->fetch(PDO::FETCH_ASSOC);
 
+ 
+
     if (!$originalStockData) {
         http_response_code(404);
         echo json_encode(['error' => 'Stock data not found for the product and MRP']); 
         exit;
     }
+
+ 
 
     // Calculate original stock values
     if ($adjustment['adjusted_type'] === 'subtract') {
@@ -63,6 +81,8 @@ try {
         $originalCurrentStock = $originalStockData['current_stock'] - $adjustment['adjusted_stock'];
     }
     $originalPhysicalStock = $originalCurrentStock + $originalStockData['excess_stock'];
+
+ 
 
     // Prepare updated data
     $updatedData = [
@@ -73,6 +93,8 @@ try {
         'reason' => $data['reason'] ?? $adjustment['reason']
     ];
 
+ 
+
     // Update stock adjustment record
     $updateQuery = "UPDATE stock_adjustment SET ";
     $updateValues = [];
@@ -82,12 +104,16 @@ try {
     }
     $updateQuery = rtrim($updateQuery, ', ') . " WHERE unique_id = :uniqueId"; // Use unique_id for WHERE clause
 
+ 
+
     $stmt = $pdo->prepare($updateQuery);
     $stmt->bindParam(':uniqueId', $uniqueId); // Bind uniqueId for WHERE clause
     foreach ($updateValues as $key => $value) {
         $stmt->bindValue($key, $value);
     }
     $stmt->execute();
+
+ 
 
     // Recalculate and update stock in product_mrp table
     if ($updatedData['adjusted_type'] === 'subtract') {
@@ -97,6 +123,8 @@ try {
     }
     $newPhysicalStock = $newCurrentStock + $originalStockData['excess_stock'];
 
+ 
+
     $stmt = $pdo->prepare("UPDATE product_mrp SET current_stock = :newCurrentStock, physical_stock = :newPhysicalStock 
                             WHERE product_id = :productId AND mrp = :mrp");
     $stmt->bindParam(':newCurrentStock', $newCurrentStock);
@@ -105,17 +133,23 @@ try {
     $stmt->bindParam(':mrp', $adjustment['mrp']);
     $stmt->execute();
 
+ 
+
     // Check and update notification status
     if ($newPhysicalStock <= $originalStockData['minimum_stock']) { 
         $updateNotificationStmt = $pdo->prepare("UPDATE product_mrp SET notification = 'Low stock warning' WHERE product_id = :productId AND mrp = :mrp");
     } else {
-        $updateNotificationStmt = $pdo->prepare("UPDATE product_mrp SET notification = NULL WHERE product_id = :productId AND mrp = :mrp");
+        $updateNotificationStmt = $pdo->prepare("UPDATE product_mrp SET notification = '' WHERE product_id = :productId AND mrp = :mrp");
     }
     $updateNotificationStmt->bindParam(':productId', $adjustment['product_id']);
     $updateNotificationStmt->bindParam(':mrp', $adjustment['mrp']);
     $updateNotificationStmt->execute();
 
-    echo json_encode(['status' => '200', 'message' => 'Stock adjustment updated successfully']);
+ 
+
+    echo json_encode(['data' => '200', 'message' => 'Stock adjustment updated successfully']);
+
+ 
 
 } catch (PDOException $e) {
     http_response_code(500);
