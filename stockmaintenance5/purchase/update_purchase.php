@@ -130,6 +130,16 @@ try {
         // Handle staff user request
         if ($userRole === 'staff') {
             foreach ($purchaseDetails as $purchaseDetail) {
+                // purchase_detail['purchase_id'] -> product['product_id'] & product['sku'] should be fetched the product table
+                $stmt = $pdo->prepare("SELECT * FROM product WHERE product_id = :product_id");
+                $stmt->execute([':product_id' => $purchaseDetail['product_id']]);
+                $product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if (!$product) {
+                    echo json_encode(['status' => '400', 'message' => 'Product details not found']);
+                    exit;
+                }
+
                 $stmt = $pdo->prepare("INSERT INTO notifications (unique_id, table_type, types_unique_id, order_id, vendor_customer_id, invoice_number, original_unique_id, staff_id, staff_name, product_id, product_name, sku, quantity, mrp, product, sales_through, admin_confirmation)
                                VALUES (:unique_id, :table_type, :types_unique_id, :order_id, :vendor_customer_id, :invoice_number, :original_unique_id, :staff_id, :staff_name, :product_id, :product_name, :sku, :quantity, :mrp, :product, :sales_through, :admin_confirmation)");
                 $stmt->execute([
@@ -189,6 +199,7 @@ try {
         $oldCurrentStock = $oldProductMrp['current_stock'] - $oldQuantity;
         $oldPhysicalStock = $oldCurrentStock + $oldProductMrp['excess_stock'];
 
+        // Update stock for the old MRP
         $stmt = $pdo->prepare("UPDATE product_mrp SET 
             current_stock = :current_stock, 
             physical_stock = :physical_stock 
@@ -226,11 +237,15 @@ try {
         // Update purchase_mrp table
         $stmt = $pdo->prepare("UPDATE purchase_mrp SET 
             product_id = :product_id, 
+            product_name = :product_name,
+            sku = :sku,
             mrp = :mrp, 
             quantity = :quantity 
             WHERE unique_id = :unique_id");
         $stmt->execute([
             ':product_id' => $productId,
+            ':product_name' => $product['product_name'],
+            ':sku' => $product['sku'],
             ':mrp' => $mrp,
             ':quantity' => $quantityWithUnit,
             ':unique_id' => $uniqueId
