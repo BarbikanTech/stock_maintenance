@@ -1,9 +1,16 @@
 <?php
 // Allow CORS for all origins (Adjust as needed)
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+header("Access-Control-Allow-Credentials: true");
 header("Content-Type: application/json");
+
+//Handle preflight request
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
 require_once '../dbconfig/config.php';
 
@@ -50,7 +57,7 @@ try {
 
     if ($adjustedType === 'subtract') {
         $newCurrentStock = $stockData['current_stock'] - $adjustedStock;
-    } else { 
+    } else { // adjustedType === 'add'
         $newCurrentStock = $stockData['current_stock'] + $adjustedStock;
     }
 
@@ -104,7 +111,7 @@ try {
         $updateNotificationStmt->execute();
     }
 
-    echo json_encode(['status' => '200', 'message' => 'Stock Adjust Successfully', 'stock_id' => $stockId]); 
+    echo json_encode(['message' => 'Stock adjustment created successfully', 'stock_id' => $stockId]); 
 
 } catch (PDOException $e) {
     http_response_code(500);
