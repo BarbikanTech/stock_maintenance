@@ -14,6 +14,7 @@ require '../dbconfig/config.php';
 
 // Ensure database connection exists
 if (!isset($pdo)) {
+    http_response_code(500);
     echo json_encode(['error' => 'Database connection failed.']);
     exit;
 }
@@ -23,9 +24,13 @@ $input = file_get_contents("php://input");
 $data = json_decode($input, true);
 
 // Validate required fields
-if (!isset($data['unique_id'], $data['date'], $data['product_id'], $data['mrp'], $data['lob'])) {
-    echo json_encode(['error' => 'Invalid input data.']);
-    exit;
+$required_fields = ['unique_id', 'date', 'product_id', 'mrp', 'lob'];
+foreach ($required_fields as $field) {
+    if (!isset($data[$field])) {
+        http_response_code(400);
+        echo json_encode(['error' => "Missing required field: $field"]);
+        exit;
+    }
 }
 
 // Assign input variables
@@ -36,12 +41,16 @@ $mrp = $data['mrp'];
 $lob = $data['lob'];
 
 try {
+    // Start transaction
+    $pdo->beginTransaction();
+
     // Fetch product details
     $stmt = $pdo->prepare("SELECT product_name, sku FROM product WHERE product_id = :product_id");
     $stmt->execute(['product_id' => $product_id]);
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$product) {
+        http_response_code(404);
         echo json_encode(['error' => 'Product not found.']);
         exit;
     }
@@ -55,6 +64,7 @@ try {
     $product_mrp = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$product_mrp) {
+        http_response_code(404);
         echo json_encode(['error' => 'MRP not found for the product.']);
         exit;
     }
@@ -110,7 +120,7 @@ try {
             'available_piece' => $available_piece
         ]);
 
-        echo json_encode(['success' => 'Data updated successfully.']);
+        $message = 'Data updated successfully.';
     } else {
         // Insert new record if unique_id does not exist
         $stmt = $pdo->prepare("INSERT INTO stock_moment_log 
@@ -131,10 +141,19 @@ try {
             'available_piece' => $available_piece
         ]);
 
-        echo json_encode(['success' => '200', 'message' => 'New data inserted successfully.']);
+        $message = 'New data inserted successfully.';
     }
 
+    // Commit transaction
+    $pdo->commit();
+    
+    http_response_code(200);
+    echo json_encode(['success' => 200, 'message' => $message]);
+
 } catch (PDOException $e) {
-    echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
+    $pdo->rollBack();
+    error_log("Database error: " . $e->getMessage(), 3, "../logs/error_log.txt");
+    http_response_code(500);
+    echo json_encode(['error' => 'Database error occurred.']);
 }
 ?>
