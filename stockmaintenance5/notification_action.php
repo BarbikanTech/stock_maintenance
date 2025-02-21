@@ -23,9 +23,6 @@ if (!isset($input['unique_id'], $input['admin_confirmation'])) {
 $uniqueId = $input['unique_id'];
 $adminConfirmation = (int)$input['admin_confirmation']; // 1 = updated, 0 = not updated
 
-// Initialize the notification variable
-$notifications = ''; // Add this line
-
 try {
     // Start transaction
     $pdo->beginTransaction();
@@ -43,10 +40,6 @@ try {
         exit;
     }
 
-    // Extract notification details
-    $originalUniqueId = $notifications['original_unique_id'];
-    $updateQuantity = (int)$notifications['update_quantity']; // Ensure quantity is numeric
-
     // Update admin confirmation status
     $stmt = $pdo->prepare("UPDATE notifications SET admin_confirmation = :admin_confirmation WHERE unique_id = :unique_id");
     $stmt->execute([
@@ -56,12 +49,78 @@ try {
 
     // If admin has confirmed, proceed to update
     if ($adminConfirmation == 1) {
-        // Retrieve the table type (purchase or sales) and relevant data
-        $tableType = $notifications['table_type'];
+        $tableType = $notifications['table_type']; // Get the table type
+        $tableUniqueId = $notifications['types_unique_id']; // Get the table unique ID
+        $originalUniqueId = $notifications['original_unique_id']; // Get the original unique ID
+        $productId = $notifications['product_id'];
+        $productName = $notifications['product_name'];
+        $sku = $notifications['sku'];
+        $mrp = $notifications['mrp'];
+        $quantity = $notifications['quantity'];
+        $invoiceNumber = $notifications['invoice_number'];
+        $vendorId = $notifications['vendor_customer_id'];
+        $orderId = $notifications['order_id'];
+        $product = $notifications['product'];
+        $salesThrough = $notifications['sales_through'];
 
-        // Handle purchase notification
-        if ($tableType == 'purchase') {
-            // Fetch purchase details using original_unique_id
+        if ($tableType === 'purchase') {
+            //Update purchase table with vendor information
+            $stmt = $pdo->prepare("SELECT vendor_name, mobile_number, business_name, gst_number, address FROM vendors WHERE vendor_id = :vendor_id");
+            $stmt->execute([':vendor_id' => $vendorId]);
+            $vendor = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if(!$vendor) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Vendor not found'
+                ]);
+                exit;
+            }
+
+            // Extract vendor details for the purchase table
+            $vendorName = $vendor['vendor_name'];
+            $mobileNumber = $vendor['mobile_number'];
+            $businessName = $vendor['business_name'];
+            $gstNumber = $vendor['gst_number'];
+            $address = $vendor['address'];
+
+            $stmt = $pdo->prepare("UPDATE purchase SET 
+            vendor_id = :vendor_id, 
+            invoice_number = :invoice_number, 
+            vendor_name = :vendor_name, 
+            mobile_number = :mobile_number, 
+            business_name = :business_name, 
+            gst_number = :gst_number, 
+            address = :address 
+            WHERE unique_id = :unique_id");
+
+            $stmt->execute([
+                ':vendor_id' => $vendorId,  
+                ':invoice_number' => $invoiceNumber,
+                ':vendor_name' => $vendorName,
+                ':mobile_number' => $mobileNumber,
+                ':business_name' => $businessName,
+                ':gst_number' => $gstNumber,
+                ':address' => $address,
+                ':unique_id' => $tableUniqueId // Check if this value is correctly assigned
+            ]); 
+
+            // Fetch product details
+            $stmt = $pdo->prepare("SELECT * FROM product WHERE product_id = :product_id");
+            $stmt->execute([':product_id' => $productId]);
+            $product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$product) {
+                echo json_encode(['status' => 'error', 'message' => 'Product details not found']);
+                exit;
+            }
+
+            $unitParts = explode(' ', $product['unit']);
+            $unitName = isset($unitParts[1]) ? $unitParts[1] : $product['unit'];
+            $quantityWithUnit = $quantity . ' ' . $unitName;
+
+
+            // Fetch purchase details
             $stmt = $pdo->prepare("SELECT * FROM purchase_mrp WHERE unique_id = :unique_id");
             $stmt->execute([':unique_id' => $originalUniqueId]);
             $purchaseDetail = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -69,100 +128,110 @@ try {
             if (!$purchaseDetail) {
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'Purchase details not found'
+                    'message' => 'Purchase details not found for unique_id: ' . $originalUniqueId
                 ]);
                 exit;
             }
 
-            // Fetch product details using product_id
-            $stmt = $pdo->prepare("SELECT unit FROM product WHERE product_id = :product_id");
-            $stmt->execute([':product_id' => $purchaseDetail['product_id']]);
-            $product = $stmt->fetch(PDO::FETCH_ASSOC);
+            $oldProductId = $purchaseDetail['product_id'];
+            $oldMrp = $purchaseDetail['mrp'];
+            $oldQuantity = (int) filter_var($purchaseDetail['quantity'], FILTER_SANITIZE_NUMBER_INT);
 
-            if (!$product) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Product details not found'
-                ]);
-                exit;
-            }
-
-            // Extract unit name (remove numeric prefix)
-            $unitParts = explode(' ', $product['unit']);
-            $unitName = isset($unitParts[1]) ? $unitParts[1] : $product['unit'];
-
-            // Combine quantity and unit for storage
-            $quantityWithUnit = $updateQuantity . ' ' . $unitName;
-
-            $productId = $purchaseDetail['product_id'];
-            $mrp = $purchaseDetail['mrp'];
-
-            // Fetch product stock
+            // Fetch old product MRP details
             $stmt = $pdo->prepare("SELECT * FROM product_mrp WHERE product_id = :product_id AND mrp = :mrp");
-            $stmt->execute([
-                ':product_id' => $productId, 
-                ':mrp' => $mrp
-            ]);
-            $productMRP = $stmt->fetch(PDO::FETCH_ASSOC);
+            $stmt->execute([':product_id' => $oldProductId, ':mrp' => $oldMrp]);
+            $oldProductMrp = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if (!$productMRP) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Product MRP details not found'
-                ]);
+            if (!$oldProductMrp) {
+                echo json_encode(['status' => 'error', 'message' => 'Product MRP details not found']);
                 exit;
             }
 
-            // Define minimum stock before use
-            $minimumStock = $productMRP['minimum_stock'];
+            // Adjust the stock levels
+            $oldCurrentStock = $oldProductMrp['current_stock'] - $oldQuantity;
+            $oldPhysicalStock = $oldCurrentStock + $oldProductMrp['excess_stock'];
 
-            // Update product stock
-            $purchaseQuantity = (int) $purchaseDetail['quantity']; // Assuming quantity is stored as "<number> <unit>"
-            $quantityDifference = $updateQuantity - $purchaseQuantity;
-            $newCurrentStock = $productMRP['current_stock'] + $quantityDifference;
-            $newExcessStock = $productMRP['excess_stock'];
-            $physicalStock = $newCurrentStock + $productMRP['excess_stock'];
-            $notification = ($physicalStock < $minimumStock) ? 'Low stock warning for product ID: ' . $productId : '';
-
-            // Corrected SQL Update Query
             $stmt = $pdo->prepare("UPDATE product_mrp SET 
                 current_stock = :current_stock, 
-                excess_stock = :excess_stock, 
-                physical_stock = :physical_stock, 
-                notification = :notification 
-                WHERE product_id = :product_id AND mrp = :mrp");
+                physical_stock = :physical_stock 
+                WHERE unique_id = :unique_id");
+            $stmt->execute([
+                ':current_stock' => $oldCurrentStock,
+                ':physical_stock' => $oldPhysicalStock,
+                ':unique_id' => $oldProductMrp['unique_id']
+            ]);
 
+            // Fetch new product MRP details
+            $stmt = $pdo->prepare("SELECT * FROM product_mrp WHERE product_id = :product_id AND mrp = :mrp");
+            $stmt->execute([':product_id' => $productId, ':mrp' => $mrp]);
+            $productMrp = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$productMrp) {
+                echo json_encode(['status' => 'error', 'message' => 'Product MRP details not found']);
+                exit;
+            }
+
+            // Update the stock levels
+            $newCurrentStock = $productMrp['current_stock'] + $quantity;
+            $newPhysicalStock = $newCurrentStock + $productMrp['excess_stock'];
+
+            // Update product_mrp table
+            $stmt = $pdo->prepare("UPDATE product_mrp SET 
+                current_stock = :current_stock, 
+                physical_stock = :physical_stock 
+                WHERE unique_id = :unique_id");
             $stmt->execute([
                 ':current_stock' => $newCurrentStock,
-                ':excess_stock' => $newExcessStock,
-                ':physical_stock' => $physicalStock,
-                ':notification' => $notification,
-                ':product_id' => $productId,
-                ':mrp' => $mrp
+                ':physical_stock' => $newPhysicalStock,
+                ':unique_id' => $productMrp['unique_id']
             ]);
 
             // Update purchase_mrp table
             $stmt = $pdo->prepare("UPDATE purchase_mrp SET 
+                product_id = :product_id,
+                product_name = :product_name,
+                sku = :sku,
+                mrp = :mrp,
                 quantity = :quantity 
                 WHERE unique_id = :unique_id");
 
             $stmt->execute([
-                ':quantity' => $quantityWithUnit,  // Corrected variable name
-                ':unique_id' => $originalUniqueId  // Use original_unique_id from notification table
+                ':product_id' => $productId,
+                ':product_name' => $productName,
+                ':sku' => $sku,
+                ':mrp' => $mrp,
+                ':quantity' => $quantityWithUnit,
+                ':unique_id' => $originalUniqueId
             ]);
 
-            // Insert into stock history
-            $stmt = $pdo->prepare ("UPDATE stock_history SET
+            // Update stock_history table
+            $stmt = $pdo->prepare("UPDATE stock_history SET
+                types = :types,
+                invoice_number = :invoice_number,
+                vendor_id = :vendor_id,
+                customer_id = :customer_id,
+                product_id = :product_id,
+                order_id = :order_id,
+                sku = :sku,
+                mrp = :mrp,
                 quantity = :quantity
                 WHERE unique_id = :unique_id");
 
             $stmt->execute([
-                ':quantity' => $quantityWithUnit,  // Corrected variable name
-                ':unique_id' => $originalUniqueId  // Use original_unique_id from notification table
+                ':types' => 'inward',
+                ':invoice_number' => $invoiceNumber,
+                ':vendor_id' => $vendorId,
+                ':customer_id' => 'N/A', // Ensure this is correctly set
+                ':product_id' => $productId,
+                ':order_id' => $orderId,
+                ':sku' => $sku,
+                ':mrp' => $mrp,
+                ':quantity' => $quantityWithUnit,
+                ':unique_id' => $originalUniqueId
             ]);
-        }
+             
 
-        // Handle sales notification
+        }
         // Handle sales notification
         else if ($tableType == 'sales') {
 
@@ -333,11 +402,11 @@ try {
         ]);
     }
 } catch (PDOException $e) {
-    // Rollback the transaction in case of error
     $pdo->rollBack();
     echo json_encode([
         'status' => 'error',
         'message' => 'Database error: ' . $e->getMessage()
     ]);
+    error_log("SQL Error: " . $e->getMessage()); // Log error for debugging
 }
 ?>
