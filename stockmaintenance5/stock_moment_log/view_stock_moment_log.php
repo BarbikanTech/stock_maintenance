@@ -9,48 +9,21 @@ header("Content-Type: application/json");
 require_once '../dbconfig/config.php';
 
 try {
-    // Fetch all stock moment log records with product details
-    $stmt = $pdo->prepare("
-        SELECT 
-            sm.id,
-            sm.unique_id,
-            sm.date,
-            sm.product_id,
-            p.product_name,
-            p.sku,
-            sm.mrp,
-            sm.lob,
-            sm.inward,
-            sm.outward,
-            sm.available_piece
-        FROM 
-            stock_moment_log sm
-        LEFT JOIN 
-            product p ON sm.product_id = p.product_id
-        ORDER BY 
-            sm.id ASC
-    ");
+    // Fetch only active stock moment logs (where deleted_at = 0)
+    $stmt = $pdo->prepare("SELECT * FROM stock_moment_log WHERE deleted_at = 0 ORDER BY created_date DESC");
     $stmt->execute();
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $stock_moment_logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // Format response
+    $response = [
+        'status' => '200',
+        'data' => $results
+    ];
 
-    if ($stock_moment_logs) {
-        echo json_encode([
-            'status' => 'success',
-            'data' => $stock_moment_logs
-        ]);
-    } else {
-        echo json_encode([
-            'status' => 'success',
-            'message' => 'No stock moment logs found',
-            'data' => []
-        ]);
-    }
+    echo json_encode($response, JSON_PRETTY_PRINT);
+
 } catch (PDOException $e) {
-    error_log('Database error: ' . $e->getMessage()); // Log error for debugging
-    echo json_encode([
-        'status' => 'error',
-        'message' => 'Database error occurred'
-    ]);
+    http_response_code(400);
+    echo json_encode(['status' => '400', 'message' => 'Database error: ' . $e->getMessage()]);
 }
 ?>
