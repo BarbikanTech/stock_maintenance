@@ -111,7 +111,7 @@ try {
         $updateNotificationStmt->execute();
     }
 
-    echo json_encode(['message' => 'Stock adjustment created successfully', 'stock_id' => $stockId]); 
+    echo json_encode(['status' => '200', 'message' => 'Stock adjustment created successfully', 'stock_id' => $stockId]); 
 
 } catch (PDOException $e) {
     http_response_code(500);
