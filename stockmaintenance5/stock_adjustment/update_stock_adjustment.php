@@ -147,7 +147,7 @@ try {
 
  
 
-    echo json_encode(['data' => '200', 'message' => 'Stock adjustment updated successfully']);
+    echo json_encode(['status' => '200', 'message' => 'Stock adjustment updated successfully']);
 
  
 
