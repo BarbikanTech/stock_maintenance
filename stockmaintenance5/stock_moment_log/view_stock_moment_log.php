@@ -10,7 +10,7 @@ require_once '../dbconfig/config.php';
 
 try {
     // Fetch only active stock moment logs (where deleted_at = 0)
-    $stmt = $pdo->prepare("SELECT * FROM stock_moment_log WHERE deleted_at = 0 ORDER BY created_date DESC");
+    $stmt = $pdo->prepare("SELECT * FROM stock_moment_log WHERE deleted_at = 0 ORDER BY id ASC");
     $stmt->execute();
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
