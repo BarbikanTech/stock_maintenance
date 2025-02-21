@@ -133,6 +133,16 @@ try {
          // If the user is a staff member, just insert notifications for all sales_details and exit
         if ($userRole === 'staff') {
         foreach ($salesDetails as $salesDetail) {
+            // sales_details['product_id'] -> product['product_id'] & product['sku'] product['sku'] should be fetched from the product table
+            $stmt = $pdo->prepare("SELECT * FROM product WHERE product_id = :product_id");
+            $stmt->execute([':product_id' => $salesDetail['product_id']]);
+            $product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$product) {
+                echo json_encode(['status' => 'error', 'message' => 'Product details not found']);
+                exit;
+            }
+
             $stmt = $pdo->prepare("INSERT INTO notifications (unique_id, table_type, types_unique_id, order_id, vendor_customer_id, invoice_number, original_unique_id, staff_id, staff_name, product_id, product_name, sku, quantity, mrp, product, sales_through, admin_confirmation)
                                VALUES (:unique_id, :table_type, :types_unique_id, :order_id, :vendor_customer_id, :invoice_number, :original_unique_id, :staff_id, :staff_name, :product_id, :product_name, :sku, :quantity, :mrp, :product, :sales_through, :admin_confirmation)");
 
