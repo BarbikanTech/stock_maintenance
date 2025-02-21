@@ -12,6 +12,7 @@ try {
     // Fetch all stock moment log records with product details
     $stmt = $pdo->prepare("
         SELECT 
+            sm.id,
             sm.unique_id,
             sm.date,
             sm.product_id,
@@ -27,7 +28,7 @@ try {
         LEFT JOIN 
             product p ON sm.product_id = p.product_id
         ORDER BY 
-            sm.product_id ASC
+            sm.id ASC
     ");
     $stmt->execute();
 
