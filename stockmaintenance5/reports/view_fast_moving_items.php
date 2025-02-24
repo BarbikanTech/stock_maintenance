@@ -31,7 +31,10 @@ try {
             p.product_id AS Product_ID,
             p.product_name AS Product_Name,
             p.sku AS SKU,
-            pm.mrp AS MRP
+            p.subunit AS Subunit,
+            pm.mrp AS MRP,
+            pm.current_stock AS DMS,
+            pm.physical_stock AS Physical_Stock
         FROM 
             product p
         LEFT JOIN 
@@ -75,6 +78,13 @@ try {
 
         // Add MRP details
         $groupedData[$productId]['mrp_details'][] = [
+            'ID' => $row['ID'],
+            'Product_ID' => $row['Product_ID'],
+            'Product_Name' => $row['Product_Name'],
+            'SKU' => $row['SKU'],
+            'Subunit' => $row['Subunit'], 
+            'DMS' => $row['DMS'],
+            'Physical_Stock' => $row['Physical_Stock']
             'MRP' => $row['MRP']
         ];
     }
