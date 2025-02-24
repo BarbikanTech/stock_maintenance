@@ -231,6 +231,14 @@ try {
 
         $oldProductMrp['physical_stock'] = $oldProductMrp['current_stock'] + $oldProductMrp['excess_stock'];
 
+        $oldnotification = '';
+        if ($oldProductMrp['physical_stock'] < $oldProductMrp['minimum_stock']) {
+            $oldnotification = 'Low stock warning';
+        }
+        else {
+            $oldnotification = '';
+        }
+
         $stmt = $pdo->prepare("UPDATE product_mrp SET 
             current_stock = :current_stock, 
             excess_stock = :excess_stock,
@@ -271,6 +279,8 @@ try {
         $notification = '';
         if ($newProductMrp['physical_stock'] < $newProductMrp['minimum_stock']) {
             $notification = 'Low stock warning';
+        } else {
+            $notification = '';
         }
 
         $newProductMrp['physical_stock'] = $newProductMrp['current_stock'] + $newProductMrp['excess_stock'];
