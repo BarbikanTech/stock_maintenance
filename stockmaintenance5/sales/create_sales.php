@@ -159,7 +159,12 @@ try {
 
         // Calculate physical stock
         $newPhysicalStock = $newCurrentStock + $newExcessStock;
-        $notification = $newPhysicalStock < $minimumStock ? 'Low stock warning' : '';
+        $notification = '';
+        if ($newCurrentStock < $minimumStock) {
+            $notification = 'Low stock';
+        } else ($newCurrentStock > $minimumStock) {
+            $notification = '';
+        }
 
         // Update product MRP table
         $stmt = $pdo->prepare("UPDATE product_mrp SET 
