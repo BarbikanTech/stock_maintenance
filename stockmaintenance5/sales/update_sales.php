@@ -26,7 +26,15 @@ $customerId = $input['customer_id'];
 $invoiceNumber = $input['invoice_number'];
 $salesDetails = $input['sales_details'];
 $date = !empty($input['date']) ? $input['date'] : date('Y-m-d');
-$userUniqueId = $input['user_unique_id'];
+$userUniqueId = $input['user_unique_id']; 
+
+// Optional fields
+$lrNo = $input['lr_no'] ?? null;
+$lrDate = $input['lr_date'] ?? null;
+$shipmentDate = $input['shipment_date'] ?? null;
+$shipmentName = $input['shipment_name'] ?? null;
+$transportName = $input['transport_name'] ?? null;
+$deliveryDetails = $input['delivery_details'] ?? null;
 
 try {
     // Fetch the role of the user (admin or staff)
@@ -82,7 +90,7 @@ try {
     }
 
     // Update customer_id and invoice_number in sales table
-    $stmt = $pdo->prepare("UPDATE sales SET customer_id = :customer_id, invoice_number = :invoice_number, customer_name = :customer_name, mobile_number = :mobile_number, business_name = :business_name, gst_number = :gst_number , address = :address WHERE unique_id = :sales_id");
+    $stmt = $pdo->prepare("UPDATE sales SET customer_id = :customer_id, invoice_number = :invoice_number, customer_name = :customer_name, mobile_number = :mobile_number, business_name = :business_name, gst_number = :gst_number , address = :address, lr_no = :lr_no, lr_date = :lr_date, shipment_date = :shipment_date, shipment_name = :shipment_name, transport_name = :transport_name, delivery_details = :delivery_details WHERE unique_id = :sales_id");
     $stmt->execute([
         ':customer_id' => $customerId,
         ':invoice_number' => $invoiceNumber,
@@ -91,7 +99,13 @@ try {
         ':mobile_number' => $mobileNumber,
         ':business_name' => $businessName,
         ':gst_number' => $gstNumber,
-        ':address' => $address
+        ':address' => $address,
+        ':lr_no' => $lrNo,
+        ':lr_date' => $lrDate,
+        ':shipment_date' => $shipmentDate,
+        ':shipment_name' => $shipmentName,
+        ':transport_name' => $transportName,
+        ':delivery_details' => $deliveryDetails
     ]);
 
     foreach ($salesDetails as $salesDetail) {
@@ -143,8 +157,8 @@ try {
                 exit;
             }
 
-            $stmt = $pdo->prepare("INSERT INTO notifications (unique_id, table_type, types_unique_id, order_id, vendor_customer_id, invoice_number, original_unique_id, staff_id, staff_name, product_id, product_name, sku, quantity, mrp, product, sales_through, admin_confirmation)
-                               VALUES (:unique_id, :table_type, :types_unique_id, :order_id, :vendor_customer_id, :invoice_number, :original_unique_id, :staff_id, :staff_name, :product_id, :product_name, :sku, :quantity, :mrp, :product, :sales_through, :admin_confirmation)");
+            $stmt = $pdo->prepare("INSERT INTO notifications (unique_id, table_type, types_unique_id, order_id, vendor_customer_id, invoice_number, lr_no, lr_date, shipment_date, shipment_name, transport_name, delivery_details, original_unique_id, staff_id, staff_name, product_id, product_name, sku, quantity, mrp, product, sales_through, admin_confirmation)
+                               VALUES (:unique_id, :table_type, :types_unique_id, :order_id, :vendor_customer_id, :invoice_number, :lr_no, :lr_date, :shipment_date, :shipment_name, :transport_name, :delivery_details, :original_unique_id, :staff_id, :staff_name, :product_id, :product_name, :sku, :quantity, :mrp, :product, :sales_through, :admin_confirmation)");
 
             $stmt->execute([
                 ':unique_id' => uniqid(),
@@ -153,6 +167,12 @@ try {
                 ':order_id' => $sales['order_id'],
                 ':vendor_customer_id' => $customerId,
                 ':invoice_number' => $invoiceNumber,
+                ':lr_no' => $lrNo,
+                ':lr_date' => $lrDate,
+                ':shipment_date' => $shipmentDate,
+                ':shipment_name' => $shipmentName,
+                ':transport_name' => $transportName,
+                ':delivery_details' => $deliveryDetails,
                 ':original_unique_id' => $salesDetail['unique_id'],
                 ':staff_id' => $user['name_id'], // Logged-in staff ID
                 ':staff_name' => $user['name'], // Staff name
