@@ -12,7 +12,7 @@ require_once 'dbconfig/config.php';
 $input = json_decode(file_get_contents('php://input'), true);
 
 // Validate required fields
-if (!isset($input['unique_id'], $input['admin_confirmation'])) {
+if (!isset($input['unique_id'], $input['admin_confirmation'])) {  
     echo json_encode([
         'status' => 'error',
         'message' => 'Missing required fields'
@@ -51,6 +51,12 @@ try {
     if ($adminConfirmation == 1) {
         $tableType = $notifications['table_type']; // Get the table type
         $tableUniqueId = $notifications['types_unique_id']; // Get the table unique ID
+        $lrno = $notifications['lr_no'];
+        $lrdate = $notifications['lr_date'];
+        $shipmentDate = $notifications['shipment_date'];
+        $shipmentName = $notifications['shipment_name'];
+        $transportName = $notifications['transport_name'];
+        $deliveryDetails = $notifications['delivery_details'];
         $originalUniqueId = $notifications['original_unique_id']; // Get the original unique ID
         $productId = $notifications['product_id'];
         $productName = $notifications['product_name'];
@@ -234,26 +240,62 @@ try {
         }
         // Handle sales notification
         else if ($tableType == 'sales') {
+            // update sales table with customer information
+            $stmt = $pdo->prepare("SELECT customer_name, mobile_number, gst_number, address FROM customers WHERE customer_id = :customer_id");
+            $stmt->execute([':customer_id' => $vendorId]);
+            $customer = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            // Fetch existing sales record
-            $stmt = $pdo->prepare("SELECT * FROM sales_mrp WHERE unique_id = :unique_id");
-            $stmt->execute([':unique_id' => $originalUniqueId]);  // Link using original_unique_id
-            $salesDetail = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$salesDetail) {
+            if (!$customer) {
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'Sales record not found'
+                    'message' => 'Customer not found'
                 ]);
                 exit;
             }
 
-            // Fetch product details using product_id
-            $stmt = $pdo->prepare("SELECT unit FROM product WHERE product_id = :product_id");
-            $stmt->execute([':product_id' => $salesDetail['product_id']]);
-            $product = $stmt->fetch(PDO::FETCH_ASSOC);
+            // Extract customer details for the sales table
+            $customerName = $customer['customer_name'];
+            $mobileNumber = $customer['mobile_number'];
+            $gstNumber = $customer['gst_number'];
+            $address = $customer['address'];
 
-            if (!$product) {
+            $stmt = $pdo->prepare("UPDATE sales SET
+            customer_id = :customer_id,
+            invoice_number = :invoice_number,
+            customer_name = :customer_name,
+            mobile_number = :mobile_number,
+            gst_number = :gst_number,
+            address = :address,
+            lr_no = :lr_no,
+            lr_date = :lr_date,
+            shipment_date = :shipment_date,
+            shipment_name = :shipment_name,
+            transport_name = :transport_name,
+            delivery_details = :delivery_details
+            WHERE unique_id = :unique_id");
+
+            $stmt->execute([
+                ':customer_id' => $vendorId,
+                ':invoice_number' => $invoiceNumber,
+                ':customer_name' => $customerName,
+                ':mobile_number' => $mobileNumber,
+                ':gst_number' => $gstNumber,
+                ':address' => $address,
+                ':lr_no' => $lrno,
+                ':lr_date' => $lrdate,
+                ':shipment_date' => $shipmentDate,
+                ':shipment_name' => $shipmentName,
+                ':transport_name' => $transportName,
+                ':delivery_details' => $deliveryDetails,
+                ':unique_id' => $tableUniqueId
+            ]);
+
+            // Fetch product details
+            $stmt = $pdo->prepare("SELECT * FROM product WHERE product_id = :product_id");
+            $stmt->execute([':product_id' => $productId]);
+            $products = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$products) {
                 echo json_encode([
                     'status' => 'error',
                     'message' => 'Product details not found'
@@ -261,128 +303,150 @@ try {
                 exit;
             }
 
-            // Extract unit name (remove numeric prefix)
-            $unitParts = explode(' ', $product['unit']);
-            $unitName = isset($unitParts[1]) ? $unitParts[1] : $product['unit'];
+            $unitParts = explode(' ', $products['unit']);
+            $unitName = isset($unitParts[1]) ? $unitParts[1] : $products['unit'];
+            $quantityWithUnit = $quantity . ' ' . $unitName;
 
-            // Combine new quantity and unit for storage
-            $quantityWithUnit = $updateQuantity . ' ' . $unitName;
+            // Fetch sales details
+            $stmt = $pdo->prepare("SELECT * FROM sales_mrp WHERE unique_id = :unique_id");
+            $stmt->execute([':unique_id' => $originalUniqueId]);
+            $salesDetail = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            $productId = $salesDetail['product_id'];
-            $mrp = $salesDetail['mrp'];
-
-            // Fetch product stock from product_mrp table
-            $stmt = $pdo->prepare("SELECT unique_id, current_stock, excess_stock, minimum_stock, physical_stock FROM product_mrp WHERE product_id = :product_id AND mrp = :mrp");
-            $stmt->execute([
-                ':product_id' => $productId,
-                ':mrp' => $mrp
-            ]);
-            $productMRP = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$productMRP) {
+            if (!$salesDetail) {
                 echo json_encode([
-                    'status' => 'error',  
+                    'status' => 'error',
+                    'message' => 'Sales details not found for unique_id: ' . $originalUniqueId
+                ]);
+                exit;
+            }
+
+            $oldProductId = $salesDetail['product_id'];
+            $oldMrp = $salesDetail['mrp'];
+            $oldQuantity = (int) filter_var($salesDetail['quantity'], FILTER_SANITIZE_NUMBER_INT);
+            $oldProduct = $salesDetail['product'];
+            $oldSalesThrough = $salesDetail['sales_through'];
+
+            // Fetch old product MRP details
+            $stmt = $pdo->prepare("SELECT * FROM product_mrp WHERE product_id = :product_id AND mrp = :mrp");
+            $stmt->execute([':product_id' => $oldProductId, ':mrp' => $oldMrp]);
+            $oldProductMrp = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$oldProductMrp) {
+                echo json_encode([
+                    'status' => 'error',
                     'message' => 'Product MRP details not found'
                 ]);
                 exit;
             }
 
-            // Retrieve the old quantity from the sales record (assuming format "10 kg")
-            $oldQuantityStr = $salesDetail['quantity'];
-            if (preg_match('/^\d+\s+\w+$/', $oldQuantityStr)) { // Check if the format matches "<number> <unit>"
-                $oldQuantityParts = explode(' ', $oldQuantityStr);
-                $oldQuantity = (int)$oldQuantityParts[0]; // Extract old quantity as integer
-            } else {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Invalid quantity format in the existing sales record'
-                ]);
-                exit;
+            // Reverse stock changes for the old MRP & Product entry
+            if ($oldProduct === 'Original' && $oldSalesThrough === 'DMS Stock') {
+                $oldProductMrp['current_stock'] += $oldQuantity;
+            } elseif ($oldProduct === 'Duplicate' && $oldSalesThrough === 'Excess Stock') {
+                $oldProductMrp['current_stock'] += $oldQuantity;
+                $oldProductMrp['excess_stock'] -= $oldQuantity;
+            } elseif ($oldProduct === 'Original' && $oldSalesThrough === 'Excess Stock') {
+                $oldProductMrp['excess_stock'] += $oldQuantity;
             }
 
-            // STEP 1: Revert the old sale
-            if ($salesDetail['product'] === 'Original' && $salesDetail['sales_through'] === 'DMS Stock') {
-                $productMRP['current_stock'] += $oldQuantity;
-            } elseif ($salesDetail['product'] === 'Duplicate' && $salesDetail['sales_through'] === 'Excess Stock') {
-                $productMRP['current_stock'] += $oldQuantity;
-                $productMRP['excess_stock'] -= $oldQuantity;
-            } elseif ($salesDetail['product'] === 'Original' && $salesDetail['sales_through'] === 'Excess Stock') {
-                $productMRP['excess_stock'] += $oldQuantity;
-            }
+            $oldProductMrp['physical_stock'] = $oldProductMrp['current_stock'] + $oldProductMrp['excess_stock'];
 
-            $newCurrentStock = $productMRP['current_stock'];
-            $newExcessStock = $productMRP['excess_stock'];
-
-            // STEP 2: Apply the new sale
-            if ($salesDetail['product'] === 'Original' && $salesDetail['sales_through'] === 'DMS Stock') {
-                $newCurrentStock -= $updateQuantity;
-            } elseif ($salesDetail['product'] === 'Duplicate' && $salesDetail['sales_through'] === 'Excess Stock') {
-                $newCurrentStock -= $updateQuantity;
-                $newExcessStock += $updateQuantity;
-            } elseif ($salesDetail['product'] === 'Original' && $salesDetail['sales_through'] === 'Excess Stock') {
-                $newExcessStock -= $updateQuantity;
-            } else {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Invalid sales record details for product ID: ' . $productId . ' and MRP: ' . $mrp . '. Please check the product and sales_through fields'
-                ]);
-                exit;
-            }
-
-            // Validate stock levels
-            if ($newCurrentStock < 0 || $newExcessStock < 0) {
-                echo json_encode([ 
-                    'status' => 'error',          
-                    'message' => 'Insufficient stock'
-                ]);
-                exit;
-            }
-
-            // Recalculate physical stock and set notification if needed
-            $physicalStock = $newCurrentStock + $newExcessStock;
-            $notification = '';
-
-            if ($physicalStock < $productMRP['minimum_stock']) {
-                $notification = 'Low stock warning for product ID: ' . $productId;
-            } else{
-                $notification = '';
-            }
-
-
-
-            // Update product_mrp table
+            // Update the old product MRP details
             $stmt = $pdo->prepare("UPDATE product_mrp SET 
                 current_stock = :current_stock, 
                 excess_stock = :excess_stock, 
-                physical_stock = :physical_stock, 
-                notification = :notification 
-                WHERE product_id = :product_id AND mrp = :mrp");
-
-            $stmt->execute([
-                ':current_stock' => $newCurrentStock,
-                ':excess_stock' => $newExcessStock,
-                ':physical_stock' => $physicalStock,
-                ':notification' => $notification,
-                ':product_id' => $productId,
-                ':mrp' => $mrp
-            ]);
-
-            // Update sales_mrp table with the new quantity (include unit)
-            $stmt = $pdo->prepare("UPDATE sales_mrp SET 
-                quantity = :quantity 
+                physical_stock = :physical_stock 
                 WHERE unique_id = :unique_id");
 
-            $stmt->execute([ 
+            $stmt->execute([
+                ':current_stock' => $oldProductMrp['current_stock'],
+                ':excess_stock' => $oldProductMrp['excess_stock'],
+                ':physical_stock' => $oldProductMrp['physical_stock'],
+                ':unique_id' => $oldProductMrp['unique_id']
+            ]);
+
+            // Deduct stock for the new MRP
+            $stmt = $pdo->prepare("SELECT * FROM product_mrp WHERE product_id = :product_id AND mrp = :mrp");
+            $stmt->execute([':product_id' => $productId, ':mrp' => $mrp]);
+            $productMrp = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$productMrp) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Product MRP details not found'
+                ]);
+                exit;
+            }
+
+            if ($product === 'Original' && $salesThrough === 'DMS Stock') {
+                $productMrp['current_stock'] -= $quantity;
+            } elseif ($product === 'Duplicate' && $salesThrough === 'Excess Stock') {
+                $productMrp['current_stock'] -= $quantity;
+                $productMrp['excess_stock'] += $quantity;
+            } elseif ($product === 'Original' && $salesThrough === 'Excess Stock') {
+                $productMrp['excess_stock'] -= $quantity;
+            }
+
+            $productMrp['physical_stock'] = $productMrp['current_stock'] + $productMrp['excess_stock'];
+
+            // Update the new product MRP details
+            $stmt = $pdo->prepare("UPDATE product_mrp SET 
+                current_stock = :current_stock, 
+                excess_stock = :excess_stock, 
+                physical_stock = :physical_stock 
+                WHERE unique_id = :unique_id");
+
+            $stmt->execute([
+                ':current_stock' => $productMrp['current_stock'],
+                ':excess_stock' => $productMrp['excess_stock'],
+                ':physical_stock' => $productMrp['physical_stock'],
+                ':unique_id' => $productMrp['unique_id']
+            ]);
+
+            // Update sales_mrp table
+            $stmt = $pdo->prepare("UPDATE sales_mrp SET 
+                product_id = :product_id,
+                product_name = :product_name,
+                sku = :sku,
+                quantity = :quantity,
+                mrp = :mrp,
+                product = :product,
+                sales_through = :sales_through 
+                WHERE unique_id = :unique_id");
+
+            $stmt->execute([
+                ':product_id' => $productId,
+                ':product_name' => $productName,
+                ':sku' => $sku,
                 ':quantity' => $quantityWithUnit,
+                ':mrp' => $mrp,
+                ':product' => $product,
+                ':sales_through' => $salesThrough,
                 ':unique_id' => $originalUniqueId
             ]);
 
-            // Update stock_history table if needed
-            $stmt = $pdo->prepare("UPDATE stock_history SET 
+            // Update stock_history table
+            $stmt = $pdo->prepare("UPDATE stock_history SET
+                types = :types,
+                invoice_number = :invoice_number,
+                vendor_id = :vendor_id,
+                customer_id = :customer_id,
+                product_id = :product_id,
+                order_id = :order_id,
+                sku = :sku,
+                mrp = :mrp,
                 quantity = :quantity
                 WHERE unique_id = :unique_id");
-
+            
             $stmt->execute([
+                ':types' => 'outward',
+                ':invoice_number' => $invoiceNumber,
+                ':vendor_id' => 'N/A', // Ensure this is correctly set
+                ':customer_id' => $vendorId,
+                ':product_id' => $productId,
+                ':order_id' => $orderId,
+                ':sku' => $sku,
+                ':mrp' => $mrp,
                 ':quantity' => $quantityWithUnit,
                 ':unique_id' => $originalUniqueId
             ]);
