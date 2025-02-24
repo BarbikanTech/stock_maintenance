@@ -122,7 +122,12 @@ try {
     $physicalStock = $newStock + $mrpDetails['excess_stock'];
 
     // Set notification if stock is below minimum
-    $notification = $physicalStock < $mrpDetails['minimum_stock'] ? 'Low stock warning' : '';
+    $notification = '';
+    if ($newStock < $mrpDetails['minimum_stock']) {
+        $notification = 'Low stock';
+    } else {
+        $notification = '';
+    }
 
     // Insert into purchase_mrp table
     $stmt = $pdo->prepare("INSERT INTO purchase_mrp (unique_id, order_id, product_id, product_name, sku, quantity, mrp) 
