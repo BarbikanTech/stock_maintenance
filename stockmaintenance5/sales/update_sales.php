@@ -242,13 +242,15 @@ try {
         $stmt = $pdo->prepare("UPDATE product_mrp SET 
             current_stock = :current_stock, 
             excess_stock = :excess_stock,
-            physical_stock = :physical_stock
+            physical_stock = :physical_stock,
+            notification = :notification
             WHERE unique_id = :unique_id");
 
         $stmt->execute([
             ':current_stock' => $oldProductMrp['current_stock'],
             ':excess_stock' => $oldProductMrp['excess_stock'],
             ':physical_stock' => $oldProductMrp['physical_stock'],
+            ':notification' => $oldnotification,
             ':unique_id' => $oldProductMrp['unique_id']
         ]);
 
