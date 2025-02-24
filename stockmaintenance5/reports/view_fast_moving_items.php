@@ -84,7 +84,7 @@ try {
             'SKU' => $row['SKU'],
             'Subunit' => $row['Subunit'], 
             'DMS' => $row['DMS'],
-            'Physical_Stock' => $row['Physical_Stock']
+            'Physical_Stock' => $row['Physical_Stock'],
             'MRP' => $row['MRP']
         ];
     }
