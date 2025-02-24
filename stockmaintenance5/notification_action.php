@@ -157,13 +157,22 @@ try {
             $oldCurrentStock = $oldProductMrp['current_stock'] - $oldQuantity;
             $oldPhysicalStock = $oldCurrentStock + $oldProductMrp['excess_stock'];
 
+            $oldNotification = '';
+            if ($oldCurrentStock < $oldProductMrp['minimum_stock']) {
+                $oldNotification = 'Low stock';
+            } else {
+                $oldNotification = '';
+            }
+
             $stmt = $pdo->prepare("UPDATE product_mrp SET 
                 current_stock = :current_stock, 
-                physical_stock = :physical_stock 
+                physical_stock = :physical_stock,
+                notification = :notification 
                 WHERE unique_id = :unique_id");
             $stmt->execute([
                 ':current_stock' => $oldCurrentStock,
                 ':physical_stock' => $oldPhysicalStock,
+                ':notification' => $oldNotification,
                 ':unique_id' => $oldProductMrp['unique_id']
             ]);
 
@@ -181,14 +190,23 @@ try {
             $newCurrentStock = $productMrp['current_stock'] + $quantity;
             $newPhysicalStock = $newCurrentStock + $productMrp['excess_stock'];
 
+            $newNotification = '';
+            if ($newCurrentStock < $productMrp['minimum_stock']) {
+                $newNotification = 'Low stock';
+            } else {
+                $newNotification = '';
+            }
+
             // Update product_mrp table
             $stmt = $pdo->prepare("UPDATE product_mrp SET 
                 current_stock = :current_stock, 
-                physical_stock = :physical_stock 
+                physical_stock = :physical_stock,
+                notification = :notification 
                 WHERE unique_id = :unique_id");
             $stmt->execute([
                 ':current_stock' => $newCurrentStock,
                 ':physical_stock' => $newPhysicalStock,
+                ':notification' => $newNotification,
                 ':unique_id' => $productMrp['unique_id']
             ]);
 
@@ -351,17 +369,26 @@ try {
 
             $oldProductMrp['physical_stock'] = $oldProductMrp['current_stock'] + $oldProductMrp['excess_stock'];
 
+            $oldNotification = '';
+            if ($oldProductMrp['current_stock'] < $oldProductMrp['minimum_stock']) {
+                $oldNotification = 'Low stock';
+            } else {
+                $oldNotification = '';
+            }
+
             // Update the old product MRP details
             $stmt = $pdo->prepare("UPDATE product_mrp SET 
                 current_stock = :current_stock, 
                 excess_stock = :excess_stock, 
-                physical_stock = :physical_stock 
+                physical_stock = :physical_stock,
+                notification = :notification 
                 WHERE unique_id = :unique_id");
 
             $stmt->execute([
                 ':current_stock' => $oldProductMrp['current_stock'],
                 ':excess_stock' => $oldProductMrp['excess_stock'],
                 ':physical_stock' => $oldProductMrp['physical_stock'],
+                ':notification' => $oldNotification,
                 ':unique_id' => $oldProductMrp['unique_id']
             ]);
 
@@ -389,17 +416,26 @@ try {
 
             $productMrp['physical_stock'] = $productMrp['current_stock'] + $productMrp['excess_stock'];
 
+            $newNotification = '';
+            if ($productMrp['current_stock'] < $productMrp['minimum_stock']) {
+                $newNotification = 'Low stock';
+            } else {
+                $newNotification = '';
+            }
+
             // Update the new product MRP details
             $stmt = $pdo->prepare("UPDATE product_mrp SET 
                 current_stock = :current_stock, 
                 excess_stock = :excess_stock, 
-                physical_stock = :physical_stock 
+                physical_stock = :physical_stock,
+                notification = :notification 
                 WHERE unique_id = :unique_id");
 
             $stmt->execute([
                 ':current_stock' => $productMrp['current_stock'],
                 ':excess_stock' => $productMrp['excess_stock'],
                 ':physical_stock' => $productMrp['physical_stock'],
+                ':notification' => $newNotification,
                 ':unique_id' => $productMrp['unique_id']
             ]);
 
