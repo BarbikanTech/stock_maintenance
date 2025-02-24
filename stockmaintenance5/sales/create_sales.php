@@ -162,7 +162,7 @@ try {
         $notification = '';
         if ($newCurrentStock < $minimumStock) {
             $notification = 'Low stock';
-        } else ($newCurrentStock > $minimumStock) {
+        } else {
             $notification = '';
         }
 
