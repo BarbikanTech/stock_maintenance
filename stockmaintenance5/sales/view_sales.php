@@ -12,14 +12,16 @@ try {
     // Fetch all sales records with associated product details
     $stmt = $pdo->prepare("
         SELECT s.id, s.unique_id AS sale_unique_id, s.date, s.order_id, s.invoice_number, 
-               s.customer_id, s.customer_name, s.mobile_number, s.business_name, 
-               s.gst_number, s.address, s.created_date, 
-               sm.unique_id AS product_unique_id, sm.product_id, sm.product_name, sm.sku, 
-               sm.quantity, sm.mrp, sm.product, sm.sales_through
+        s.customer_id, s.customer_name, s.mobile_number, s.business_name, 
+        s.gst_number, s.address, s.lr_no, s.lr_date, s.shipment_date, s.shipment_name, 
+        s.transport_name, s.delivery_details, s.created_date, 
+        sm.unique_id AS product_unique_id, sm.product_id, sm.product_name, sm.sku, 
+        sm.quantity, sm.mrp, sm.product, sm.sales_through
         FROM sales s
         LEFT JOIN sales_mrp sm ON s.order_id = sm.order_id
-        WHERE (s.deleted_at IS NULL OR s.deleted_at = 0) -- Exclude soft deleted records
-        ORDER BY s.created_date ASC
+        WHERE (s.deleted_at IS NULL OR s.deleted_at = 0)
+        ORDER BY s.id ASC
+
     ");
     $stmt->execute();
 
@@ -41,6 +43,12 @@ try {
                 "business_name" => $row["business_name"],
                 "gst_number" => $row["gst_number"],
                 "address" => $row["address"],
+                "lr_number" => $row["lr_no"],
+                "lr_date" => $row["lr_date"],
+                "shipment_date" => $row["shipment_date"],
+                "shipment_name" => $row["shipment_name"],
+                "transport_name" => $row["transport_name"],
+                "delivery_details" => $row["delivery_details"],
                 "created_date" => $row["created_date"],
                 "products" => []
             ];
