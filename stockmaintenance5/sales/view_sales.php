@@ -43,7 +43,7 @@ try {
                 "business_name" => $row["business_name"],
                 "gst_number" => $row["gst_number"],
                 "address" => $row["address"],
-                "lr_number" => $row["lr_no"],
+                "lr_no" => $row["lr_no"],
                 "lr_date" => $row["lr_date"],
                 "shipment_date" => $row["shipment_date"],
                 "shipment_name" => $row["shipment_name"],
