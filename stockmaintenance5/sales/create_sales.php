@@ -27,6 +27,14 @@ $invoiceNumber = $input['invoice_number'];
 $productDetails = $input['product_details'];
 $uniqueId = uniqid();
 
+// Optional fields
+$lrNo = $input['lr_no'] ?? null;
+$lrDate = $input['lr_date'] ?? null;
+$shipmentDate = $input['shipment_date'] ?? null;
+$shipmentName = $input['shipment_name'] ?? null;
+$transportName = $input['transport_name'] ?? null;
+$deliveryDetails = $input['delivery_details'] ?? null;
+
 try {
     // Start the transaction
     $pdo->beginTransaction();
@@ -59,8 +67,8 @@ try {
     $orderId = "SALE_" . $newNumber;
 
     // Insert into sales table
-    $stmt = $pdo->prepare("INSERT INTO sales (unique_id, date, order_id, customer_id, customer_name, mobile_number, business_name, gst_number, address, invoice_number, created_date) 
-                           VALUES (:unique_id, :date, :order_id, :customer_id, :customer_name, :mobile_number, :business_name, :gst_number, :address, :invoice_number, NOW())");
+    $stmt = $pdo->prepare("INSERT INTO sales (unique_id, date, order_id, customer_id, customer_name, mobile_number, business_name, gst_number, address, invoice_number, lr_no, lr_date, shipment_date, shipment_name, transport_name, delivery_details,  created_date) 
+                           VALUES (:unique_id, :date, :order_id, :customer_id, :customer_name, :mobile_number, :business_name, :gst_number, :address, :invoice_number, :lr_no, :lr_date, :shipment_date, :shipment_name, :transport_name, :delivery_details, NOW())");
     $stmt->execute([
         ':unique_id' => $uniqueId,
         ':date' => $date,
@@ -72,6 +80,12 @@ try {
         ':gst_number' => $gstNumber,
         ':address' => $address,
         ':invoice_number' => $invoiceNumber,
+        ':lr_no' => $lrNo,
+        ':lr_date' => $lrDate,
+        ':shipment_date' => $shipmentDate,
+        ':shipment_name' => $shipmentName,
+        ':transport_name' => $transportName,
+        ':delivery_details' => $deliveryDetails
     ]);
 
     $responses = [];
