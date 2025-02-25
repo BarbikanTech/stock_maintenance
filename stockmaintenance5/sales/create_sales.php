@@ -29,8 +29,8 @@ $uniqueId = uniqid();
 
 // Optional fields
 $lrNo = $input['lr_no'] ?? null;
-$lrDate = $input['lr_date'] ?? null;
-$shipmentDate = $input['shipment_date'] ?? null;
+$lrDate = !empty(trim($input['lr_date'])) ? $input['lr_date'] : null;
+$shipmentDate = !empty(trim($input['shipment_date'])) ? $input['shipment_date'] : null;
 $shipmentName = $input['shipment_name'] ?? null;
 $transportName = $input['transport_name'] ?? null;
 $deliveryDetails = $input['delivery_details'] ?? null;
