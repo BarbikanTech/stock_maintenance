@@ -90,23 +90,39 @@ try {
     }
 
     // Update customer_id and invoice_number in sales table
-    $stmt = $pdo->prepare("UPDATE sales SET customer_id = :customer_id, invoice_number = :invoice_number, customer_name = :customer_name, mobile_number = :mobile_number, business_name = :business_name, gst_number = :gst_number , address = :address, lr_no = :lr_no, lr_date = :lr_date, shipment_date = :shipment_date, shipment_name = :shipment_name, transport_name = :transport_name, delivery_details = :delivery_details WHERE unique_id = :sales_id");
-    $stmt->execute([
-        ':customer_id' => $customerId,
-        ':invoice_number' => $invoiceNumber,
-        ':sales_id' => $salesId,
-        ':customer_name' => $customerName,
-        ':mobile_number' => $mobileNumber,
-        ':business_name' => $businessName,
-        ':gst_number' => $gstNumber,
-        ':address' => $address,
-        ':lr_no' => $lrNo,
-        ':lr_date' => $lrDate,
-        ':shipment_date' => $shipmentDate,
-        ':shipment_name' => $shipmentName,
-        ':transport_name' => $transportName,
-        ':delivery_details' => $deliveryDetails
-    ]);
+    if($userRole === 'admin') {
+        $stmt = $pdo->prepare("UPDATE sales SET 
+            customer_id = :customer_id, 
+            invoice_number = :invoice_number, 
+            customer_name = :customer_name, 
+            mobile_number = :mobile_number, 
+            business_name = :business_name, 
+            gst_number =:gst_number, 
+            address =:address, 
+            lr_no = :lr_no, 
+            lr_date = :lr_date, 
+            shipment_date = :shipment_date, 
+            shipment_name = :shipment_name, 
+            transport_name = :transport_name, 
+            delivery_details = :delivery_details 
+            WHERE unique_id = :sales_id");
+        $stmt->execute([
+            ':customer_id' => $customerId,
+            ':invoice_number' => $invoiceNumber,
+            ':customer_name' => $customerName,
+            ':mobile_number' => $mobileNumber,
+            ':business_name' => $businessName,
+            ':gst_number' => $gstNumber,
+            ':address' => $address, 
+            ':lr_no' => $lrNo,
+            ':lr_date' => $lrDate,
+            ':shipment_date' => $shipmentDate,
+            ':shipment_name' => $shipmentName,
+            ':transport_name' => $transportName,
+            ':delivery_details' => $deliveryDetails,
+            ':sales_id' => $salesId
+        ]);
+    }  
 
     foreach ($salesDetails as $salesDetail) {
         if (!isset($salesDetail['product_id'], $salesDetail['quantity'], $salesDetail['mrp'], $salesDetail['product'], $salesDetail['sales_through'])) {
