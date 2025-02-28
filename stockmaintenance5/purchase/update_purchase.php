@@ -79,6 +79,7 @@ try {
     } 
 
     // Update vendor_id and invoice_number in purchase table
+    if($userRole === 'admin'){
     $stmt = $pdo->prepare("UPDATE purchase SET 
         vendor_id = :vendor_id, 
         invoice_number = :invoice_number, 
@@ -98,7 +99,7 @@ try {
         ':address' => $address,
         ':purchase_id' => $purchaseId  
     ]);
-
+    }
     foreach ($purchaseDetails as $purchaseDetail) {
         if (!isset($purchaseDetail['product_id'], $purchaseDetail['quantity'], $purchaseDetail['mrp'])) {
             echo json_encode([
@@ -199,23 +200,14 @@ try {
         $oldCurrentStock = $oldProductMrp['current_stock'] - $oldQuantity;
         $oldPhysicalStock = $oldCurrentStock + $oldProductMrp['excess_stock'];
 
-        $oldnotification = '';
-        if ($oldCurrentStock < $oldProductMrp['minimum_stock']) {
-            $oldnotification = 'Low stock warning';
-        } else {
-            $oldnotification = '';
-        }
-
         // Update stock for the old MRP
         $stmt = $pdo->prepare("UPDATE product_mrp SET 
             current_stock = :current_stock, 
-            physical_stock = :physical_stock,
-            notification = :notification 
+            physical_stock = :physical_stock 
             WHERE unique_id = :unique_id");
         $stmt->execute([
             ':current_stock' => $oldCurrentStock,
             ':physical_stock' => $oldPhysicalStock,
-            ':notification' => $oldnotification,
             ':unique_id' => $oldProductMrp['unique_id']
         ]);
 
@@ -231,24 +223,15 @@ try {
 
         // Update stock for the new MRP
         $newCurrentStock = $newProductMrp['current_stock'] + $quantity;
-        $newPhysicalStock = $newCurrentStock + $newProductMrp['excess_stock']; 
-
-        $newNotification = '';
-        if ($newCurrentStock < $newProductMrp['minimum_stock']) {
-            $newNotification = 'Low stock warning';
-        } else {
-            $newNotification = '';
-        }
+        $newPhysicalStock = $newCurrentStock + $newProductMrp['excess_stock'];
 
         $stmt = $pdo->prepare("UPDATE product_mrp SET 
             current_stock = :current_stock, 
-            physical_stock = :physical_stock,
-            notification = :notification  
+            physical_stock = :physical_stock 
             WHERE unique_id = :unique_id");
         $stmt->execute([
             ':current_stock' => $newCurrentStock,
             ':physical_stock' => $newPhysicalStock,
-            ':notification' => $newNotification,
             ':unique_id' => $newProductMrp['unique_id']
         ]);
 
