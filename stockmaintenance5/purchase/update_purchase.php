@@ -159,7 +159,7 @@ try {
                     ':shipment_date' => $shipmentDate,
                     ':shipment_name' => $shipmentName,
                     ':transport_name' => $transportName,
-                    ':delivery_details' => $deliveryDetails 
+                    ':delivery_details' => $deliveryDetails, 
                     ':original_unique_id' => $purchaseDetail['unique_id'],
                     ':staff_id' => $user['name_id'], // Logged-in staff ID
                     ':staff_name' => $user['name'], // Staff name
