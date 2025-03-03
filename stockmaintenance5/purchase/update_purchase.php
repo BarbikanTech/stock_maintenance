@@ -141,8 +141,8 @@ try {
                     exit;
                 }
 
-                $stmt = $pdo->prepare("INSERT INTO notifications (unique_id, table_type, types_unique_id, order_id, vendor_customer_id, invoice_number, original_unique_id, staff_id, staff_name, product_id, product_name, sku, quantity, mrp, product, sales_through, admin_confirmation)
-                               VALUES (:unique_id, :table_type, :types_unique_id, :order_id, :vendor_customer_id, :invoice_number, :original_unique_id, :staff_id, :staff_name, :product_id, :product_name, :sku, :quantity, :mrp, :product, :sales_through, :admin_confirmation)");
+                $stmt = $pdo->prepare("INSERT INTO notifications (unique_id, table_type, types_unique_id, order_id, vendor_customer_id, invoice_number, lr_no, lr_date, shipment_date, shipment_name, transport_name, delivery_details, original_unique_id, staff_id, staff_name, product_id, product_name, sku, quantity, mrp, product, sales_through, admin_confirmation)
+                               VALUES (:unique_id, :table_type, :types_unique_id, :order_id, :vendor_customer_id, :invoice_number, :lr_no, :lr_date, :shipment_date, :shipment_name, :transport_name, :delivery_details, :original_unique_id, :staff_id, :staff_name, :product_id, :product_name, :sku, :quantity, :mrp, :product, :sales_through, :admin_confirmation)");
                 $stmt->execute([
                     ':unique_id' => uniqid(),
                     ':table_type' => 'purchase',
@@ -150,6 +150,16 @@ try {
                     ':order_id' => $purchase['order_id'],
                     ':vendor_customer_id' => $vendorId,
                     ':invoice_number' => $invoiceNumber,
+                    ':lr_no' => 'N/A',           
+                    ':lr_date' => 'N/A',
+                    ':shipment_date' => 'N/A',
+                    ':shipment_name' => 'N/A',
+                    ':transport_name' => 'N/A',
+                    ':delivery_details' => 'N/A',
+                    ':shipment_date' => $shipmentDate,
+                    ':shipment_name' => $shipmentName,
+                    ':transport_name' => $transportName,
+                    ':delivery_details' => $deliveryDetails 
                     ':original_unique_id' => $purchaseDetail['unique_id'],
                     ':staff_id' => $user['name_id'], // Logged-in staff ID
                     ':staff_name' => $user['name'], // Staff name
